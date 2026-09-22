@@ -1,0 +1,15 @@
+{
+  "zeitraum_wochen": 8,
+  "aktive_anbieter": [
+    "netflix",
+    "amazon-prime-video",
+    "disney-plus",
+    "apple-tv",
+    "paramount-plus",
+    "wow",
+    "hbo-max"
+  ],
+  "aktive_genres": [],
+  "merkliste": [],
+  "ausgeblendet": []
+}

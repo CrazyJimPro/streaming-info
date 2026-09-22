@@ -1,0 +1,13 @@
+{
+  "_kommentar": "Feste Zuordnung unserer internen Anbieter-Schluessel zu den exakten TMDB-Anzeigenamen (Region Deutschland) und einer Farbe fuer die Uebersicht. tmdb_name muss exakt dem Namen entsprechen, den TMDB unter /watch/providers/{movie|tv}?watch_region=DE liefert - die numerische provider_id wird beim ersten Lauf automatisch aufgeloest und in der Datenbank zwischengespeichert (siehe scraper/tmdb.py:hole_anbieter_id).",
+  "anbieter": [
+    { "schluessel": "kino", "name": "Kino", "tmdb_name": null, "farbe": "#e63946" },
+    { "schluessel": "netflix", "name": "Netflix", "tmdb_name": "Netflix", "farbe": "#e50914" },
+    { "schluessel": "amazon-prime-video", "name": "Amazon Prime Video", "tmdb_name": "Amazon Prime Video", "farbe": "#00a8e1" },
+    { "schluessel": "disney-plus", "name": "Disney+", "tmdb_name": "Disney Plus", "farbe": "#113ccf" },
+    { "schluessel": "apple-tv", "name": "Apple TV+", "tmdb_name": "Apple TV", "farbe": "#555555" },
+    { "schluessel": "paramount-plus", "name": "Paramount+", "tmdb_name": "Paramount Plus", "farbe": "#0064ff" },
+    { "schluessel": "wow", "name": "WOW (Sky)", "tmdb_name": "WOW", "farbe": "#ff5a00" },
+    { "schluessel": "hbo-max", "name": "HBO Max", "tmdb_name": "HBO Max", "farbe": "#9c27b0" }
+  ]
+}

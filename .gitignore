@@ -1,0 +1,16 @@
+venv/
+data/*.db
+data/*.json
+logs/*.log
+__pycache__/
+*.pyc
+
+# Enthaelt den persoenlichen TMDB-API-Schluessel - niemals versionieren.
+config/config.json
+
+# Nutzer-editierte, aktive Einstellungen (Genres, Merkliste, Zeitraum) -
+# NICHT versionieren, sonst ueberschreibt jede Projekt-Auffrischung
+# (start.bat/start.sh Selbst-Update) die persoenliche Auswahl des Nutzers.
+# Die Vorlage selbst heisst config/einstellungen.default.json und bleibt
+# versioniert.
+config/einstellungen.json
