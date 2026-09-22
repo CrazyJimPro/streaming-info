@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Streaming-Info beendet</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("si-theme");
+        if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <header>
+    <h1>Streaming-Info beendet</h1>
+    <p class="subtitle">Es läuft jetzt nichts mehr im Hintergrund. <span class="version" title="Installierte Version">v{{ version }}</span></p>
+  </header>
+
+  <p class="hinweis">
+    Dieses Fenster kann geschlossen werden. Zum erneuten Starten einfach wieder
+    auf die Desktop-Verknüpfung <strong>„Streaming-Info“</strong> klicken &mdash;
+    dabei werden die Daten automatisch neu geholt.
+  </p>
+</body>
+</html>

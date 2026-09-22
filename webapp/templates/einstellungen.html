@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Streaming-Info &ndash; Einstellungen</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("si-theme");
+        if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Einstellungen</h1>
+      <p class="subtitle">Anbieter, Genres, Merkliste und Zeitraum <span class="version">&middot; v{{ version }}</span></p>
+    </div>
+    <div class="kopf-aktionen">
+      <button id="theme-toggle" type="button"></button>
+      <a class="knopf" href="{{ url_for('index') }}">Zurück zur Übersicht</a>
+    </div>
+  </header>
+
+  {% if gespeichert %}
+  <div class="gespeichert-hinweis">Gespeichert &ndash; die Übersicht wird jetzt im Hintergrund neu geladen.</div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('einstellungen_seite') }}">
+
+    <div class="einstellungen-block">
+      <h2>TMDB-API-Schlüssel</h2>
+      <p class="hinweis">
+        {% if api_schluessel_vorhanden %}Ein Schlüssel ist hinterlegt. Zum Ändern hier einen neuen eintragen.{% else %}Noch kein Schlüssel hinterlegt.{% endif %}
+        Kostenlos erhältlich auf <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org</a>.
+      </p>
+      <input type="password" name="tmdb_api_key" placeholder="{{ 'bereits hinterlegt – leer lassen, um ihn zu behalten' if api_schluessel_vorhanden else 'TMDB-API-Schlüssel einfügen' }}" autocomplete="off">
+    </div>
+
+    <div class="einstellungen-block">
+      <h2>Zeitraum</h2>
+      <div class="zeitraum-feld">
+        <label for="zeitraum_wochen">Wie viele Wochen im Voraus/zurück anzeigen:</label>
+        <input type="number" id="zeitraum_wochen" name="zeitraum_wochen" min="1" max="26" value="{{ einstellungen.zeitraum_wochen }}">
+      </div>
+    </div>
+
+    <div class="einstellungen-block">
+      <h2>Streaming-Anbieter</h2>
+      <div class="anbieter-grid">
+        {% for a in anbieter %}
+          {% if a.schluessel != "kino" %}
+          <div class="checkbox-zeile">
+            <input type="checkbox" id="anbieter-{{ a.schluessel }}" name="aktive_anbieter" value="{{ a.schluessel }}"
+                   {{ "checked" if a.schluessel in einstellungen.aktive_anbieter else "" }}>
+            <span class="farb-punkt" style="background:{{ a.farbe }}"></span>
+            <label for="anbieter-{{ a.schluessel }}">{{ a.name }}</label>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="einstellungen-block">
+      <h2>Genres</h2>
+      <p class="hinweis">Kein Häkchen gesetzt = alle Genres werden angezeigt.</p>
+      <div class="genre-grid">
+        {% for genre_id, name in genres %}
+        <div class="checkbox-zeile">
+          <input type="checkbox" id="genre-{{ genre_id }}" name="aktive_genres" value="{{ genre_id }}"
+                 {{ "checked" if genre_id in einstellungen.aktive_genres else "" }}>
+          <label for="genre-{{ genre_id }}">{{ name }}</label>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="einstellungen-block">
+      <h2>Merkliste</h2>
+      <p class="hinweis">Titel hier werden immer angezeigt, auch wenn ihr Genre nicht ausgewählt ist.</p>
+      <input type="text" id="merk-suche" placeholder="Film oder Serie suchen &hellip;" autocomplete="off">
+      <div id="merk-ergebnisse" class="suchergebnisse"></div>
+      <table class="merkliste-tabelle" id="merk-liste">
+        {% for eintrag in einstellungen.merkliste %}
+        <tr data-tmdb-id="{{ eintrag.tmdb_id }}" data-medientyp="{{ eintrag.medientyp }}">
+          <td>{{ eintrag.titel }} <span class="hinweis">({{ "Film" if eintrag.medientyp == "film" else "Serie" }})</span></td>
+          <td><button type="button" class="entfernen-knopf">entfernen</button></td>
+          <input type="hidden" name="merk_tmdb_id" value="{{ eintrag.tmdb_id }}">
+          <input type="hidden" name="merk_medientyp" value="{{ eintrag.medientyp }}">
+          <input type="hidden" name="merk_titel" value="{{ eintrag.titel }}">
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <div class="einstellungen-block">
+      <h2>Ausgeblendete Titel</h2>
+      <p class="hinweis">Über den „Ausblenden“-Knopf auf der Übersichtsseite hinzugefügt. Hier wieder entfernen, um einen Titel erneut anzuzeigen.</p>
+      <table class="merkliste-tabelle" id="ausblend-liste">
+        {% for eintrag in einstellungen.ausgeblendet %}
+        <tr data-tmdb-id="{{ eintrag.tmdb_id }}" data-medientyp="{{ eintrag.medientyp }}">
+          <td>{{ eintrag.titel }} <span class="hinweis">({{ "Film" if eintrag.medientyp == "film" else "Serie" }})</span></td>
+          <td><button type="button" class="entfernen-knopf">entfernen</button></td>
+          <input type="hidden" name="ausblend_tmdb_id" value="{{ eintrag.tmdb_id }}">
+          <input type="hidden" name="ausblend_medientyp" value="{{ eintrag.medientyp }}">
+          <input type="hidden" name="ausblend_titel" value="{{ eintrag.titel }}">
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <button class="primaer" type="submit">Speichern</button>
+  </form>
+
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='einstellungen.js') }}"></script>
+</body>
+</html>

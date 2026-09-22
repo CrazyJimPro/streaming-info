@@ -90,6 +90,19 @@ def hole_anbieter_katalog(
     return ergebnisse
 
 
+def suche_titel(session: requests.Session, api_key: str, suchtext: str) -> list[TitelEintrag]:
+    """Volltextsuche fuer die Merkliste in den Einstellungen (TMDB /search/multi,
+    auf Filme und Serien eingeschraenkt)."""
+    daten = get_json(session, "/search/multi", api_key, query=suchtext, include_adult="false")
+    ergebnisse = []
+    for rohdaten in daten.get("results", []):
+        if rohdaten.get("media_type") == "movie":
+            ergebnisse.append(_zu_titel_eintrag(rohdaten, "film"))
+        elif rohdaten.get("media_type") == "tv":
+            ergebnisse.append(_zu_titel_eintrag(rohdaten, "serie"))
+    return ergebnisse
+
+
 def hole_kinostarts(session: requests.Session, api_key: str, ab: date, bis: date) -> list[TitelEintrag]:
     """Liefert deutsche Kinostarts (echte TMDB-Kinostart-Termine) im Zeitraum [ab, bis].
 

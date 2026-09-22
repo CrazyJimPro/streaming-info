@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Streaming-Info</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("si-theme");
+        if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Streaming-Info</h1>
+      <p class="subtitle">
+        Kino- und Streaming-Neuheiten der letzten {{ zeitraum_wochen }} Wochen
+        <span class="version" title="Installierte Version">&middot; v{{ version }}</span>
+      </p>
+    </div>
+    <div class="kopf-aktionen">
+      <button id="theme-toggle" type="button"></button>
+      <a class="knopf" href="{{ url_for('einstellungen_seite') }}">Einstellungen</a>
+      <form method="post" action="{{ url_for('aktualisieren') }}" style="display:inline">
+        <button class="primaer" type="submit" {{ 'disabled' if scan.laeuft else '' }}>Jetzt aktualisieren</button>
+      </form>
+      <form method="post" action="{{ url_for('beenden') }}" style="display:inline"
+            onsubmit="return confirm('Streaming-Info wirklich beenden?');">
+        <button type="submit">Beenden</button>
+      </form>
+    </div>
+  </header>
+
+  {% if api_schluessel_fehlt %}
+  <div class="setup-hinweis">
+    <strong>Noch kein TMDB-API-Schlüssel hinterlegt.</strong>
+    Ohne Schlüssel können keine Daten geladen werden.
+    Trag ihn auf der <a href="{{ url_for('einstellungen_seite') }}">Einstellungen</a>-Seite ein.
+  </div>
+  {% endif %}
+
+  <div class="quellen-status">
+    {% for eintrag in status %}
+      <span class="status-chip {{ 'status-fehler' if eintrag.letzter_fehler and not eintrag.erfolg_text else ('status-ok' if eintrag.erfolg_text else '') }}">
+        {{ eintrag.quelle }}
+        {% if eintrag.erfolg_text %}&middot; {{ eintrag.alter_text }}{% if eintrag.veraltet %} (veraltet!){% endif %}{% endif %}
+        {% if eintrag.letzter_fehler and not eintrag.erfolg_text %}&middot; Fehler{% endif %}
+      </span>
+    {% endfor %}
+  </div>
+
+  <div id="scan-hinweis" class="scan-hinweis" style="display:{{ 'block' if scan.laeuft else 'none' }}">
+    Daten werden aktualisiert &mdash; das kann 2&ndash;5 Minuten dauern. Diese Seite lädt sich automatisch neu.
+  </div>
+  {% if scan.fehler %}
+  <div class="scan-hinweis fehler">Letzter Scan fehlgeschlagen: {{ scan.fehler }}</div>
+  {% endif %}
+
+  <section class="abschnitt">
+    <h2>🎬 Kinostarts</h2>
+    {% if kino %}
+    <div class="karten-grid">
+      {% for eintrag in kino %}
+      <article class="karte">
+        {% if eintrag.poster_url %}
+          <img class="poster" src="{{ eintrag.poster_url }}" alt="" loading="lazy">
+        {% else %}
+          <div class="poster-platzhalter">{{ eintrag.titel }}</div>
+        {% endif %}
+        <div class="inhalt">
+          <div class="titel">{{ eintrag.titel }}</div>
+          <div class="badges">
+            <span class="badge" style="background:{{ kino_farbe }}">Kino &middot; {{ eintrag.kinostart_lesbar }}</span>
+          </div>
+          <form class="ausblenden-formular" method="post" action="{{ url_for('ausblenden') }}">
+            <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
+            <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
+            <input type="hidden" name="titel" value="{{ eintrag.titel }}">
+            <button type="submit">Ausblenden</button>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="leer-hinweis">Keine Kinostarts im gewählten Zeitraum gefunden.</p>
+    {% endif %}
+  </section>
+
+  <section class="abschnitt">
+    <h2>📺 Neu im Streaming</h2>
+    {% if streaming %}
+    <div class="karten-grid">
+      {% for eintrag in streaming %}
+      <article class="karte">
+        {% if eintrag.poster_url %}
+          <img class="poster" src="{{ eintrag.poster_url }}" alt="" loading="lazy">
+        {% else %}
+          <div class="poster-platzhalter">{{ eintrag.titel }}</div>
+        {% endif %}
+        <div class="inhalt">
+          <div class="titel">{{ eintrag.titel }}</div>
+          <div class="datum">neu seit {{ eintrag.neu_seit_lesbar }}</div>
+          <div class="badges">
+            {% for anbieter in eintrag.anbieter_liste %}
+            <span class="badge" style="background:{{ anbieter.farbe }}">{{ anbieter.name }}</span>
+            {% endfor %}
+          </div>
+          <form class="ausblenden-formular" method="post" action="{{ url_for('ausblenden') }}">
+            <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
+            <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
+            <input type="hidden" name="titel" value="{{ eintrag.titel }}">
+            <button type="submit">Ausblenden</button>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="leer-hinweis">Noch keine Streaming-Neuheiten erkannt. Nach dem allerersten Scan ist die Vergleichsbasis noch leer &mdash; ab dem nächsten Lauf werden echte Neuzugänge sichtbar.</p>
+    {% endif %}
+  </section>
+
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script>
+    (function () {
+      var laeuft = {{ 'true' if scan.laeuft else 'false' }};
+      if (!laeuft) return;
+      var interval = setInterval(function () {
+        fetch("{{ url_for('scan_status') }}")
+          .then(function (r) { return r.json(); })
+          .then(function (daten) {
+            if (!daten.laeuft) {
+              clearInterval(interval);
+              window.location.reload();
+            }
+          })
+          .catch(function () {});
+      }, 5000);
+    })();
+  </script>
+</body>
+</html>
