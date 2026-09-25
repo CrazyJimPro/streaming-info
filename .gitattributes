@@ -1,4 +1,18 @@
 *.sh text eol=lf
 *.py text eol=lf
-*.bat text eol=crlf
-*.vbs text eol=crlf
+
+# .bat/.vbs bewusst OHNE Normalisierung ("-text") und mit CRLF im Repo:
+# Das Selbstupdate laedt den Code als ZIP-Archiv von GitHub (nicht per
+# git clone), und dort greift "eol=crlf" nicht - die Dateien kaemen mit
+# LF an. cmd.exe scheitert dann an verschachtelten Labelsprungen
+# ("call :version_zu_zahl" aus ":pruefe_version" heraus) mit
+# "Das Sprungziel ... wurde nicht gefunden", womit der Versionsvergleich
+# und damit das Selbstupdate stillschweigend ausfaellt. Mit "-text" liegt
+# CRLF im Blob und jeder Auslieferungsweg (ZIP, clone, raw) liefert es mit.
+*.bat -text
+*.vbs -text
+
+# VERSION wird von start.bat/start.sh eingelesen und mit der Fassung auf
+# GitHub verglichen - deshalb hier ein festes, plattformunabhaengiges
+# Zeilenende, damit der Vergleich nicht von core.autocrlf des Nutzers abhaengt.
+VERSION text eol=lf
