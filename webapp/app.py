@@ -37,7 +37,13 @@ from scraper.einstellungen import (  # noqa: E402
 )
 from scraper.base import TmdbFehler, neue_session  # noqa: E402
 from scraper.filter import filtere_zeilen  # noqa: E402
-from scraper.storage import DB_PFAD, hole_quellen_status, hole_starts_im_zeitraum, init_db  # noqa: E402
+from scraper.storage import (  # noqa: E402
+    DB_PFAD,
+    hole_merkliste_eintraege,
+    hole_quellen_status,
+    hole_starts_im_zeitraum,
+    init_db,
+)
 from scraper.tmdb import suche_titel  # noqa: E402
 
 app = Flask(__name__)
@@ -248,6 +254,24 @@ def _starts_aufbereiten(zeilen: list[dict], anbieter_karte: dict[str, dict], heu
     return ergebnis
 
 
+def _merkliste_aufbereiten(zeilen: list[dict], heute: date) -> list[dict]:
+    """Wie _starts_aufbereiten, aber fuer Eintraege, die auch ganz ohne Termin
+    angezeigt werden."""
+    for eintrag in zeilen:
+        eintrag["poster_url"] = _poster_url(eintrag.get("poster_pfad"))
+        eintrag["anbieter_liste"] = []
+        datum = eintrag.get("startdatum")
+        if datum:
+            eintrag["start_lesbar"] = _datum_lesbar(datum)
+            eintrag["countdown"] = _countdown_text(_tage_bis(datum, heute))
+            eintrag["zusatz"] = f"Staffel {eintrag['staffel']}" if eintrag.get("staffel") else ""
+        else:
+            eintrag["start_lesbar"] = "Noch kein Termin bekannt"
+            eintrag["countdown"] = ""
+            eintrag["zusatz"] = ""
+    return zeilen
+
+
 @app.route("/")
 def index():
     einstellungen = lade_einstellungen()
@@ -273,6 +297,13 @@ def index():
     kino_rows = hole_starts_im_zeitraum(heute, bis, ("kino",), db_pfad=DB_PFAD)
     kino = _starts_aufbereiten(filtere_zeilen(kino_rows, einstellungen), anbieter_karte, heute)
 
+    # Merkliste bewusst ungefiltert und ohne Zeitraumgrenze: gemerkt ist
+    # gemerkt. Auch Titel ohne bekannten Termin bleiben sichtbar, sonst wirkt
+    # das Merken wie wirkungslos.
+    merkliste = _merkliste_aufbereiten(
+        hole_merkliste_eintraege(einstellungen.get("merkliste", []), db_pfad=DB_PFAD), heute
+    )
+
     status = _status_aufbereiten(hole_quellen_status(db_pfad=DB_PFAD))
     api_schluessel_fehlt = not lade_api_schluessel()
 
@@ -281,6 +312,7 @@ def index():
         streaming=streaming,
         digital=digital,
         kino=kino,
+        merkliste=merkliste,
         status=status,
         heute=heute,
         bis=bis,

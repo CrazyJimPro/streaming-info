@@ -94,6 +94,22 @@
   </article>
   {% endmacro %}
 
+  {% if merkliste %}
+  <section class="abschnitt">
+    <h2>⭐ Deine Merkliste</h2>
+    <p class="abschnitt-hinweis">
+      Gemerkte Titel werden einzeln bei TMDB nachgefragt &mdash; unabhängig vom
+      Vorschau-Zeitraum, von der Anbieterauswahl und vom Genre-Filter.
+      <strong>„Noch kein Termin bekannt"</strong> heißt: TMDB führt für diesen Titel
+      (noch) kein Startdatum. Das ist bei angekündigten Staffeln häufig und
+      ändert sich, sobald der Sender einen Termin nennt.
+    </p>
+    <div class="karten-grid">
+      {% for eintrag in merkliste %}{{ kachel(eintrag, '#f59e0b', 'gemerkt') }}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   <section class="abschnitt">
     <h2>📺 Startet demnächst im Streaming</h2>
     {% if streaming %}

@@ -34,6 +34,7 @@ from scraper.tmdb import (
     hole_kinostarts,
     hole_kommende_serien,
     hole_kommende_staffeln,
+    hole_merkliste_termine,
 )
 
 PROJEKT_ROOT = Path(__file__).resolve().parent.parent
@@ -162,6 +163,25 @@ def main() -> None:
     except TmdbFehler as exc:
         markiere_quelle_fehler("kino", str(exc))
         logger.error("kino fehlgeschlagen: %s", exc)
+
+    # Merkliste zuletzt: sie fragt gezielt je Titel nach und ist damit
+    # unabhaengig von Popularitaetsfilter und Anbieterauswahl.
+    merkliste = einstellungen.get("merkliste", [])
+    if merkliste:
+        try:
+            paare = hole_merkliste_termine(session, api_key, merkliste, heute)
+            speichere_titel([t for t, _ in paare])
+            speichere_starts([s for _, s in paare if s is not None], heute)
+            entferne_unbestaetigte_starts("merkliste", heute)
+            markiere_quelle_erfolg("merkliste")
+            mit_termin = sum(1 for _, s in paare if s is not None)
+            logger.info(
+                "merkliste: %d Titel geprueft, %d mit bekanntem Termin",
+                len(paare), mit_termin,
+            )
+        except TmdbFehler as exc:
+            markiere_quelle_fehler("merkliste", str(exc))
+            logger.error("merkliste fehlgeschlagen: %s", exc)
 
     entfernt = raeume_starts_auf(heute - timedelta(days=AUFRAEUM_TAGE))
     if entfernt:

@@ -127,6 +127,49 @@ def speichere_starts(eintraege: list[StartEintrag], heute: date, db_pfad: Path =
         )
 
 
+def hole_merkliste_eintraege(merkliste: list[dict], db_pfad: Path = DB_PFAD) -> list[dict]:
+    """Liefert je gemerktem Titel die bekannten Angaben - mit Starttermin,
+    falls einer vorliegt, sonst ohne.
+
+    Anders als bei den uebrigen Abschnitten wird hier NICHT gefiltert: Ein
+    gemerkter Titel erscheint auch ohne Termin, damit sichtbar bleibt, dass er
+    beobachtet wird. Titel, die noch nie abgerufen wurden (frisch gemerkt, vor
+    dem naechsten Scan), kommen mit dem in der Merkliste gespeicherten Namen.
+    """
+    ergebnis: list[dict] = []
+    with closing(_verbindung(db_pfad)) as conn:
+        for eintrag in merkliste:
+            tmdb_id, medientyp = eintrag.get("tmdb_id"), eintrag.get("medientyp")
+            row = conn.execute(
+                """
+                SELECT t.*, s.startdatum, s.art, s.staffel
+                FROM titel t
+                LEFT JOIN starts s
+                  ON s.tmdb_id = t.tmdb_id AND s.medientyp = t.medientyp AND s.art = 'merkliste'
+                WHERE t.tmdb_id = ? AND t.medientyp = ?
+                """,
+                (tmdb_id, medientyp),
+            ).fetchone()
+            if row:
+                ergebnis.append(dict(row))
+            else:
+                ergebnis.append(
+                    {
+                        "tmdb_id": tmdb_id,
+                        "medientyp": medientyp,
+                        "titel": eintrag.get("titel") or "(unbekannt)",
+                        "poster_pfad": None,
+                        "genre_ids": "",
+                        "startdatum": None,
+                        "art": "merkliste",
+                        "staffel": None,
+                    }
+                )
+    # Titel mit Termin zuerst, das Naechste oben; alles Weitere dahinter.
+    ergebnis.sort(key=lambda e: (e.get("startdatum") is None, e.get("startdatum") or ""))
+    return ergebnis
+
+
 def entferne_unbestaetigte_starts(anbieter: str, stand: date, db_pfad: Path = DB_PFAD) -> int:
     """Entfernt Startereignisse eines Anbieters, die im Lauf vom 'stand' nicht
     mehr gemeldet wurden.

@@ -185,6 +185,90 @@ def hole_digital_starts(
     return ergebnisse
 
 
+def hole_merkliste_termine(
+    session: requests.Session, api_key: str, merkliste: list[dict], ab: date
+) -> list[tuple[TitelEintrag, StartEintrag | None]]:
+    """Fragt fuer jeden gemerkten Titel gezielt nach, ob ein Start ansteht.
+
+    Das ist bewusst ein eigener Weg und nicht Teil der Anbieter-Abfragen: Ein
+    gemerkter Titel soll auch dann auftauchen, wenn er zu unbekannt fuer den
+    Popularitaetsfilter ist, bei einem abgewaehlten Anbieter laeuft oder erst
+    weit nach dem Vorschau-Zeitraum startet. Wer einen Titel merkt, will ihn
+    sehen - nicht erklaert bekommen, warum er herausgefiltert wurde.
+
+    Der zweite Rueckgabewert ist None, wenn TMDB (noch) keinen Termin kennt.
+    Das ist der haeufige Fall und keine Stoerung: fuer viele bekannte Serien
+    steht schlicht noch kein Datum fest. Die Oberflaeche sagt das dann auch so,
+    statt den Titel wortlos wegzulassen.
+    """
+    ergebnisse: list[tuple[TitelEintrag, StartEintrag | None]] = []
+    for eintrag in merkliste:
+        tmdb_id = eintrag.get("tmdb_id")
+        medientyp = eintrag.get("medientyp")
+        if not tmdb_id or medientyp not in ("film", "serie"):
+            continue
+        try:
+            if medientyp == "serie":
+                detail = get_json(session, f"/tv/{tmdb_id}", api_key)
+            else:
+                detail = get_json(session, f"/movie/{tmdb_id}", api_key, append_to_response="release_dates")
+        except TmdbFehler as exc:
+            logger.error("Merkliste: Abruf fuer %s (%s) fehlgeschlagen: %s", tmdb_id, medientyp, exc)
+            continue
+
+        titel = _zu_titel_eintrag(detail, medientyp)
+        # /tv/{id} und /movie/{id} liefern genres als Objekte statt genre_ids.
+        titel.genre_ids = [g["id"] for g in detail.get("genres", []) if "id" in g]
+
+        start: StartEintrag | None = None
+        if medientyp == "serie":
+            naechste = detail.get("next_episode_to_air") or {}
+            datum = naechste.get("air_date")
+            if datum and datum >= ab.isoformat():
+                staffel = naechste.get("season_number")
+                start = StartEintrag(
+                    tmdb_id=titel.tmdb_id,
+                    medientyp="serie",
+                    anbieter="merkliste",
+                    startdatum=datum,
+                    art="merkliste",
+                    # Nur eine erste Folge ist wirklich ein Staffelstart; laeuft
+                    # die Staffel schon, ist es die naechste Folge.
+                    staffel=staffel if naechste.get("episode_number") == 1 else None,
+                )
+        else:
+            datum = _fruehester_filmtermin(detail, ab)
+            if datum:
+                start = StartEintrag(
+                    tmdb_id=titel.tmdb_id,
+                    medientyp="film",
+                    anbieter="merkliste",
+                    startdatum=datum,
+                    art="merkliste",
+                )
+        ergebnisse.append((titel, start))
+    return ergebnisse
+
+
+def _fruehester_filmtermin(detail: dict, ab: date) -> str | None:
+    """Fruehester noch bevorstehender deutscher Kino- oder Digitaltermin eines
+    Films. Faellt auf das allgemeine Erscheinungsdatum zurueck, wenn TMDB fuer
+    Deutschland nichts Passendes fuehrt."""
+    kandidaten: list[str] = []
+    for land in (detail.get("release_dates") or {}).get("results", []):
+        if land.get("iso_3166_1") != "DE":
+            continue
+        for rd in land.get("release_dates", []):
+            if rd.get("type") in (2, 3, DIGITAL_RELEASE_TYPE):
+                datum = (rd.get("release_date") or "")[:10]
+                if datum >= ab.isoformat():
+                    kandidaten.append(datum)
+    allgemein = detail.get("release_date")
+    if not kandidaten and allgemein and allgemein >= ab.isoformat():
+        kandidaten.append(allgemein)
+    return min(kandidaten) if kandidaten else None
+
+
 def hole_kommende_serien(
     session: requests.Session,
     api_key: str,

@@ -8,6 +8,7 @@ anläuft** — mit Startdatum. Drei Abschnitte:
   farblich nach Anbieter markiert
 - **Kino** — deutsche Kinostarttermine
 - **Digital** — Filme mit angekündigtem Termin für die digitale Auswertung
+- **Merkliste** — selbst gemerkte Titel, gezielt abgefragt (siehe unten)
 
 Was bereits läuft, steht bewusst **nicht** drin: die Übersicht beantwortet
 „worauf kann ich mich freuen", nicht „was liegt gerade im Katalog".
@@ -142,8 +143,13 @@ genau diese Nummer mit der auf GitHub — aufgefrischt wird nur, wenn die dort
 - **Vorschau-Zeitraum** — wie viele Wochen im Voraus angezeigt werden
 - **Streaming-Anbieter** — welche der sieben Anbieter abgefragt werden
 - **Genres** — Einschränkung auf bestimmte Genres (kein Häkchen = alle)
-- **Merkliste** — Filme/Serien per Live-Suche hinzufügen, die immer
-  angezeigt werden, unabhängig vom Genre-Filter
+- **Merkliste** — Filme/Serien per Live-Suche hinzufügen. Gemerkte Titel
+  bekommen einen **eigenen Abschnitt ganz oben** und werden einzeln bei TMDB
+  nachgefragt: unabhängig vom Popularitätsfilter, von der Anbieterauswahl und
+  vom Vorschau-Zeitraum. Startet eine gemerkte Serie erst in einem halben
+  Jahr, steht sie trotzdem da. Kennt TMDB noch kein Datum, erscheint der Titel
+  mit dem Vermerk *„Noch kein Termin bekannt"* — das ist bei angekündigten
+  Staffeln häufig und ändert sich, sobald der Sender einen Termin nennt
 - **Ausgeblendete Titel** — über den „Ausblenden"-Knopf an jeder Karte
 
 ## Warum nicht *alles* angezeigt wird
