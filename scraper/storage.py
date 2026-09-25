@@ -1,11 +1,17 @@
-"""SQLite-Speicherung der Titel, ihrer Anbieter-Verfuegbarkeit und Kinostarts.
+"""SQLite-Speicherung der Titel und ihrer angekuendigten Starts.
 
-Der Kern der "neu"-Erkennung fuer Streaming-Anbieter: TMDB liefert kein
-"hinzugefuegt am"-Datum, also merkt sich die Tabelle 'verfuegbarkeit' bei
-jedem Lauf selbst, wann ein Titel bei einem Anbieter zum ersten Mal gesehen
-wurde (erstmals_gesehen_am). Ein INSERT ... ON CONFLICT DO NOTHING auf den
-Zeitpunkt sorgt dafuer, dass dieses Datum nach dem ersten Mal nie wieder
-veraendert wird.
+Gespeichert wird, WANN etwas anlaeuft - nicht, was gerade im Katalog liegt.
+Die Tabelle 'starts' haelt je Titel und Anbieter ein Startereignis mit Datum
+und Art (neue Serie, neue Staffel, Kinostart, digitaler Filmstart). Ein
+erneuter Lauf aktualisiert ein bereits bekanntes Ereignis, damit verschobene
+Termine nachziehen; 'gesehen_am' verraet, wann die Angabe zuletzt bestaetigt
+wurde.
+
+Vorgeschichte: Bis v0.1.1 stand hier eine Tabelle 'verfuegbarkeit', die sich
+ueber wiederholte Laeufe selbst zusammenreimte, wann ein Titel neu in einem
+Katalog auftauchte ("neu dazugekommen"). Das beantwortete aber die falsche
+Frage - interessant ist, was noch kommt, nicht was schon da ist. Die alte
+Tabelle wird nicht mehr beschrieben oder gelesen.
 """
 from __future__ import annotations
 
@@ -14,7 +20,7 @@ from contextlib import closing
 from datetime import date, datetime
 from pathlib import Path
 
-from scraper.base import TitelEintrag
+from scraper.base import StartEintrag, TitelEintrag
 
 PROJEKT_ROOT = Path(__file__).resolve().parent.parent
 DB_PFAD = PROJEKT_ROOT / "data" / "streaming.db"
@@ -33,22 +39,18 @@ CREATE TABLE IF NOT EXISTS titel (
     PRIMARY KEY (tmdb_id, medientyp)
 );
 
-CREATE TABLE IF NOT EXISTS verfuegbarkeit (
+CREATE TABLE IF NOT EXISTS starts (
     tmdb_id INTEGER NOT NULL,
     medientyp TEXT NOT NULL,
     anbieter TEXT NOT NULL,
-    erstmals_gesehen_am TEXT NOT NULL,
-    zuletzt_gesehen_am TEXT NOT NULL,
-    PRIMARY KEY (tmdb_id, medientyp, anbieter)
+    startdatum TEXT NOT NULL,
+    art TEXT NOT NULL,
+    staffel INTEGER,
+    gesehen_am TEXT NOT NULL,
+    PRIMARY KEY (tmdb_id, medientyp, anbieter, art)
 );
 
-CREATE TABLE IF NOT EXISTS anbieter_provider_ids (
-    anbieter TEXT NOT NULL,
-    medientyp TEXT NOT NULL,
-    tmdb_provider_id INTEGER NOT NULL,
-    aufgeloest_am TEXT NOT NULL,
-    PRIMARY KEY (anbieter, medientyp)
-);
+CREATE INDEX IF NOT EXISTS starts_datum ON starts (startdatum);
 
 CREATE TABLE IF NOT EXISTS quellen_status (
     quelle TEXT PRIMARY KEY,
@@ -104,44 +106,33 @@ def speichere_titel(eintraege: list[TitelEintrag], db_pfad: Path = DB_PFAD) -> N
         )
 
 
-def speichere_verfuegbarkeit(
-    tmdb_id: int, medientyp: str, anbieter: str, heute: date, db_pfad: Path = DB_PFAD
-) -> None:
+def speichere_starts(eintraege: list[StartEintrag], heute: date, db_pfad: Path = DB_PFAD) -> None:
+    """Schreibt Startereignisse. Ein schon bekanntes Ereignis wird
+    aktualisiert - so ziehen verschobene Termine beim naechsten Lauf nach."""
     heute_iso = heute.isoformat()
     with closing(_verbindung(db_pfad)) as conn, conn:
-        conn.execute(
+        conn.executemany(
             """
-            INSERT INTO verfuegbarkeit (tmdb_id, medientyp, anbieter, erstmals_gesehen_am, zuletzt_gesehen_am)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(tmdb_id, medientyp, anbieter) DO UPDATE SET zuletzt_gesehen_am = excluded.zuletzt_gesehen_am
+            INSERT INTO starts (tmdb_id, medientyp, anbieter, startdatum, art, staffel, gesehen_am)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(tmdb_id, medientyp, anbieter, art) DO UPDATE SET
+                startdatum = excluded.startdatum,
+                staffel = excluded.staffel,
+                gesehen_am = excluded.gesehen_am
             """,
-            (tmdb_id, medientyp, anbieter, heute_iso, heute_iso),
+            [
+                (e.tmdb_id, e.medientyp, e.anbieter, e.startdatum, e.art, e.staffel, heute_iso)
+                for e in eintraege
+            ],
         )
 
 
-def hole_anbieter_provider_id(anbieter: str, medientyp: str, db_pfad: Path = DB_PFAD) -> int | None:
-    with closing(_verbindung(db_pfad)) as conn:
-        row = conn.execute(
-            "SELECT tmdb_provider_id FROM anbieter_provider_ids WHERE anbieter = ? AND medientyp = ?",
-            (anbieter, medientyp),
-        ).fetchone()
-        return row["tmdb_provider_id"] if row else None
-
-
-def speichere_anbieter_provider_id(
-    anbieter: str, medientyp: str, provider_id: int, db_pfad: Path = DB_PFAD
-) -> None:
-    jetzt = datetime.now().isoformat(timespec="seconds")
+def raeume_starts_auf(vor_datum: date, db_pfad: Path = DB_PFAD) -> int:
+    """Entfernt Startereignisse, die laengst vorbei sind. Ohne das wuechse die
+    Tabelle mit jedem Lauf weiter, obwohl nur Zukuenftiges angezeigt wird."""
     with closing(_verbindung(db_pfad)) as conn, conn:
-        conn.execute(
-            """
-            INSERT INTO anbieter_provider_ids (anbieter, medientyp, tmdb_provider_id, aufgeloest_am)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(anbieter, medientyp) DO UPDATE SET
-                tmdb_provider_id = excluded.tmdb_provider_id, aufgeloest_am = excluded.aufgeloest_am
-            """,
-            (anbieter, medientyp, provider_id, jetzt),
-        )
+        cur = conn.execute("DELETE FROM starts WHERE startdatum < ?", (vor_datum.isoformat(),))
+        return cur.rowcount
 
 
 def markiere_quelle_erfolg(quelle: str, db_pfad: Path = DB_PFAD) -> None:
@@ -176,30 +167,24 @@ def hole_quellen_status(db_pfad: Path = DB_PFAD) -> list[dict]:
         return [dict(row) for row in rows]
 
 
-def hole_streaming_neuheiten(ab_datum: date, db_pfad: Path = DB_PFAD) -> list[dict]:
-    """Alle Titel, die bei mindestens einem Anbieter seit ab_datum neu gesehen wurden."""
+def hole_starts_im_zeitraum(
+    ab_datum: date, bis_datum: date, arten: tuple[str, ...], db_pfad: Path = DB_PFAD
+) -> list[dict]:
+    """Angekuendigte Starts der gewuenschten Arten im Zeitraum, das frueheste
+    zuerst. 'arten' waehlt die Sektion aus: ("serie", "staffel") fuer die
+    Streaming-Starts, ("digital",) fuer digitale Filmstarts."""
+    platzhalter = ",".join("?" for _ in arten)
     with closing(_verbindung(db_pfad)) as conn:
         rows = conn.execute(
-            """
-            SELECT t.*, v.anbieter, v.erstmals_gesehen_am
-            FROM verfuegbarkeit v
-            JOIN titel t ON t.tmdb_id = v.tmdb_id AND t.medientyp = v.medientyp
-            WHERE v.erstmals_gesehen_am >= ?
-            ORDER BY v.erstmals_gesehen_am DESC
+            f"""
+            SELECT t.*, s.anbieter, s.startdatum, s.art, s.staffel
+            FROM starts s
+            JOIN titel t ON t.tmdb_id = s.tmdb_id AND t.medientyp = s.medientyp
+            WHERE s.startdatum >= ? AND s.startdatum <= ? AND s.art IN ({platzhalter})
+            ORDER BY s.startdatum ASC
             """,
-            (ab_datum.isoformat(),),
+            (ab_datum.isoformat(), bis_datum.isoformat(), *arten),
         ).fetchall()
         return [dict(row) for row in rows]
 
 
-def hole_kinostarts_im_zeitraum(ab_datum: date, bis_datum: date, db_pfad: Path = DB_PFAD) -> list[dict]:
-    with closing(_verbindung(db_pfad)) as conn:
-        rows = conn.execute(
-            """
-            SELECT * FROM titel
-            WHERE kinostart_de >= ? AND kinostart_de <= ?
-            ORDER BY kinostart_de ASC
-            """,
-            (ab_datum.isoformat(), bis_datum.isoformat()),
-        ).fetchall()
-        return [dict(row) for row in rows]

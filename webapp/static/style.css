@@ -200,6 +200,39 @@ section.abschnitt h2 {
   font-size: 0.78rem;
 }
 
+/* Das Startdatum ist in einer Vorschau die Hauptinformation, deshalb steht es
+   in der Kachel bewusst kraeftiger als der uebrige Beitext. */
+.karte .datum strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.countdown {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--chip-bg, rgba(127, 127, 127, 0.18));
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.feld-hinweis {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 0.4rem 0 0;
+  max-width: 62ch;
+  line-height: 1.45;
+}
+
+.abschnitt-hinweis {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin: -0.4rem 0 0.9rem;
+  max-width: 62ch;
+  line-height: 1.45;
+}
+
 .badges {
   display: flex;
   flex-wrap: wrap;

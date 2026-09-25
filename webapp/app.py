@@ -37,13 +37,12 @@ from scraper.einstellungen import (  # noqa: E402
 )
 from scraper.base import TmdbFehler, neue_session  # noqa: E402
 from scraper.filter import filtere_zeilen  # noqa: E402
-from scraper.storage import DB_PFAD, hole_kinostarts_im_zeitraum, hole_quellen_status, hole_streaming_neuheiten, init_db  # noqa: E402
+from scraper.storage import DB_PFAD, hole_quellen_status, hole_starts_im_zeitraum, init_db  # noqa: E402
 from scraper.tmdb import suche_titel  # noqa: E402
 
 app = Flask(__name__)
 
 TMDB_POSTER_BASIS = "https://image.tmdb.org/t/p/w300"
-KINO_RUECKBLICK_TAGE = 14
 
 VERALTET_AB_STUNDEN = 24
 
@@ -191,24 +190,61 @@ def _datum_lesbar(iso: str | None) -> str:
         return iso
 
 
-def _streaming_gruppieren(zeilen: list[dict], anbieter_karte: dict[str, dict]) -> list[dict]:
-    """Fasst mehrere Verfuegbarkeits-Zeilen desselben Titels (z.B. gleichzeitig
-    neu bei Netflix UND Amazon) zu einer Anzeige-Zeile mit mehreren
-    Anbieter-Badges zusammen."""
+def _tage_bis(iso: str | None, heute: date) -> int | None:
+    if not iso:
+        return None
+    try:
+        return (datetime.strptime(iso, "%Y-%m-%d").date() - heute).days
+    except ValueError:
+        return None
+
+
+def _countdown_text(tage: int | None) -> str:
+    """Kurze Angabe, wie weit der Start noch weg ist - das ist bei einer
+    Vorschau die eigentlich interessante Information."""
+    if tage is None:
+        return ""
+    if tage <= 0:
+        return "heute"
+    if tage == 1:
+        return "morgen"
+    if tage < 7:
+        return f"in {tage} Tagen"
+    if tage < 14:
+        return "nächste Woche"
+    return f"in {tage // 7} Wochen"
+
+
+def _starts_aufbereiten(zeilen: list[dict], anbieter_karte: dict[str, dict], heute: date) -> list[dict]:
+    """Macht aus Start-Zeilen Anzeigeeintraege und fasst denselben Titel
+    zusammen, wenn er am selben Tag bei mehreren Anbietern anlaeuft (dann eine
+    Kachel mit mehreren Badges statt zwei fast gleichen Kacheln)."""
     gruppiert: dict[tuple, dict] = {}
     for zeile in zeilen:
-        schluessel = (zeile["tmdb_id"], zeile["medientyp"])
-        eintrag = gruppiert.setdefault(
-            schluessel,
-            {**zeile, "anbieter_liste": [], "neu_seit": zeile["erstmals_gesehen_am"]},
-        )
+        schluessel = (zeile["tmdb_id"], zeile["medientyp"], zeile["startdatum"])
+        eintrag = gruppiert.setdefault(schluessel, {**zeile, "anbieter_liste": []})
         info = anbieter_karte.get(zeile["anbieter"])
         eintrag["anbieter_liste"].append(
-            {"name": info["name"] if info else zeile["anbieter"], "farbe": info["farbe"] if info else "#888"}
+            {
+                "name": info["name"] if info else zeile["anbieter"],
+                "farbe": info["farbe"] if info else "#888",
+            }
         )
-        eintrag["neu_seit"] = max(eintrag["neu_seit"], zeile["erstmals_gesehen_am"])
     ergebnis = list(gruppiert.values())
-    ergebnis.sort(key=lambda e: e["neu_seit"], reverse=True)
+    for eintrag in ergebnis:
+        tage = _tage_bis(eintrag.get("startdatum"), heute)
+        eintrag["poster_url"] = _poster_url(eintrag.get("poster_pfad"))
+        eintrag["start_lesbar"] = _datum_lesbar(eintrag.get("startdatum"))
+        eintrag["countdown"] = _countdown_text(tage)
+        # Staffelstarts brauchen den Zusatz, sonst sieht die Kachel aus wie
+        # eine brandneue Serie.
+        if eintrag.get("art") == "staffel" and eintrag.get("staffel"):
+            eintrag["zusatz"] = f"Staffel {eintrag['staffel']}"
+        elif eintrag.get("art") == "serie":
+            eintrag["zusatz"] = "neue Serie"
+        else:
+            eintrag["zusatz"] = ""
+    ergebnis.sort(key=lambda e: e["startdatum"])
     return ergebnis
 
 
@@ -218,21 +254,24 @@ def index():
     anbieter_karte = _anbieter_karte()
     heute = date.today()
     zeitraum_wochen = einstellungen.get("zeitraum_wochen", 8)
+    bis = heute + timedelta(weeks=zeitraum_wochen)
 
-    ab_streaming = heute - timedelta(weeks=zeitraum_wochen)
-    streaming_rows = filtere_zeilen(hole_streaming_neuheiten(ab_streaming), einstellungen)
-    streaming = _streaming_gruppieren(streaming_rows, anbieter_karte)
-    for eintrag in streaming:
-        eintrag["poster_url"] = _poster_url(eintrag.get("poster_pfad"))
-        eintrag["neu_seit_lesbar"] = _datum_lesbar(eintrag.get("neu_seit"))
+    # Nur aktive Anbieter zeigen - der Scan holt zwar nur diese, aber nach dem
+    # Abwaehlen eines Anbieters lagen dessen Starts sonst noch in der Datenbank.
+    aktive = set(einstellungen.get("aktive_anbieter", []))
 
-    ab_kino = heute - timedelta(days=KINO_RUECKBLICK_TAGE)
-    bis_kino = heute + timedelta(weeks=zeitraum_wochen)
-    kino_rows = filtere_zeilen(hole_kinostarts_im_zeitraum(ab_kino, bis_kino), einstellungen)
-    for eintrag in kino_rows:
-        eintrag["poster_url"] = _poster_url(eintrag.get("poster_pfad"))
-        eintrag["kinostart_lesbar"] = _datum_lesbar(eintrag.get("kinostart_de"))
-    kino_rows.sort(key=lambda r: r["kinostart_de"])
+    streaming_rows = [
+        z
+        for z in hole_starts_im_zeitraum(heute, bis, ("serie", "staffel"), db_pfad=DB_PFAD)
+        if z["anbieter"] in aktive
+    ]
+    streaming = _starts_aufbereiten(filtere_zeilen(streaming_rows, einstellungen), anbieter_karte, heute)
+
+    digital_rows = hole_starts_im_zeitraum(heute, bis, ("digital",), db_pfad=DB_PFAD)
+    digital = _starts_aufbereiten(filtere_zeilen(digital_rows, einstellungen), anbieter_karte, heute)
+
+    kino_rows = hole_starts_im_zeitraum(heute, bis, ("kino",), db_pfad=DB_PFAD)
+    kino = _starts_aufbereiten(filtere_zeilen(kino_rows, einstellungen), anbieter_karte, heute)
 
     status = _status_aufbereiten(hole_quellen_status(db_pfad=DB_PFAD))
     api_schluessel_fehlt = not lade_api_schluessel()
@@ -240,9 +279,11 @@ def index():
     return render_template(
         "index.html",
         streaming=streaming,
-        kino=kino_rows,
+        digital=digital,
+        kino=kino,
         status=status,
         heute=heute,
+        bis=bis,
         zeitraum_wochen=zeitraum_wochen,
         scan=_scan_status,
         api_schluessel_fehlt=api_schluessel_fehlt,

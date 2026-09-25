@@ -24,6 +24,31 @@ class TitelEintrag:
     kinostart_de: str | None = None
 
 
+@dataclass
+class StartEintrag:
+    """Ein angekuendigter Start in der Zukunft - das, was dieses Tool zeigt.
+
+    Anders als die frueher gespeicherte "Verfuegbarkeit" (was liegt gerade im
+    Katalog) beschreibt das hier ein Ereignis mit Datum: dann laeuft es an.
+
+    art:
+      "serie"   - eine neue Serie startet beim Anbieter (erste Staffel)
+      "staffel" - eine neue Staffel einer laufenden Serie startet
+      "kino"    - deutscher Kinostart
+      "digital" - Film erscheint digital/VOD. ACHTUNG: TMDB nennt fuer
+                  zukuenftige Digital-Starts KEINE Plattform (per Stichprobe
+                  geprueft: durchgehend leer), deshalb steht bei dieser Art
+                  im Feld anbieter immer "digital" und nie ein echter Dienst.
+    """
+
+    tmdb_id: int
+    medientyp: str  # "film" oder "serie"
+    anbieter: str  # Anbieter-Schluessel, "kino" oder "digital"
+    startdatum: str  # ISO-Datum
+    art: str
+    staffel: int | None = None
+
+
 class TmdbFehler(Exception):
     """Wird geworfen, wenn ein TMDB-Aufruf fehlschlaegt."""
 

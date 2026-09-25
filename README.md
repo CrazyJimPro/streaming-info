@@ -1,15 +1,25 @@
 # Streaming-Info
 
-Ein privates, lokales Tool: zeigt Kinostarts und Neuheiten bei Netflix,
-Amazon Prime Video, Disney+, Apple TV+, Paramount+, WOW (Sky) und HBO Max in
-einer lokalen Web-App an — farblich nach Quelle unterschieden, mit
-einstellbarem Zeitraum (Wochen im Voraus/zurück).
+Ein privates, lokales Tool: zeigt in einer lokalen Web-App, **was demnächst
+anläuft** — mit Startdatum. Drei Abschnitte:
+
+- **Streaming** — Serien und neue Staffeln, die bei Netflix, Amazon Prime
+  Video, Disney+, Apple TV+, Paramount+, WOW (Sky) oder HBO Max starten,
+  farblich nach Anbieter markiert
+- **Kino** — deutsche Kinostarttermine
+- **Digital** — Filme mit angekündigtem Termin für die digitale Auswertung
+
+Was bereits läuft, steht bewusst **nicht** drin: die Übersicht beantwortet
+„worauf kann ich mich freuen", nicht „was liegt gerade im Katalog".
 
 Datenquelle ist [TMDB](https://www.themoviedb.org) (The Movie Database).
-Da TMDB kein "am X zu Netflix hinzugefügt"-Datum kennt, merkt sich das Tool
-bei jedem Lauf selbst, welche Titel bei welchem Anbieter neu aufgetaucht
-sind — **nach dem allerersten Lauf ist die Vergleichsbasis noch leer**, ab
-dem zweiten Lauf zeigt die Übersicht echte Neuzugänge.
+
+**Eine Einschränkung vorweg, weil sie sichtbar ist:** Bei kommenden *Filmen*
+nennt TMDB zwar den Termin, aber keine Plattform — deshalb stehen sie im
+Abschnitt „Digital" ohne Anbieter-Logo. Bei *Serien* ist die Zuordnung
+dagegen sauber, weil sie über die TV-Netzwerke des jeweiligen Anbieters
+läuft. Für WOW/Sky ist die Serien-Ausbeute dünn, dort führt TMDB nur das
+Netzwerk Sky Deutschland.
 
 Es läuft **nichts im Hintergrund**: die Daten werden geholt, wenn die App
 gestartet wird — und mit dem Knopf **„Beenden"** auf der Seite ist alles
@@ -62,7 +72,7 @@ richtet diese Datei selbst ein.
    liegt jetzt die Verknüpfung **„Streaming-Info"**.
 5. **TMDB-API-Schlüssel eintragen:** oben auf *Einstellungen* klicken, den
    Schlüssel einfügen, *Speichern*. Der erste echte Datenabruf läuft danach
-   automatisch im Hintergrund (2–5 Minuten).
+   automatisch im Hintergrund (ein paar Sekunden).
 
 Installiert wird nach `%USERPROFILE%\streaming-info`. Die heruntergeladene
 `start.bat` aus `Downloads` wird danach nicht mehr gebraucht.
@@ -99,9 +109,7 @@ Bei jedem Start passiert automatisch:
 1. Es wird geprüft, ob auf GitHub eine **neuere Version** vorliegt. Wenn ja,
    wird der komplette Code aufgefrischt und die App neu gestartet (eine noch
    laufende Instanz wird vorher beendet).
-2. Die **Daten werden frisch geholt** (2–5 Minuten, im Hintergrund — ein
-   TMDB-Scan über sieben Anbieter dauert länger als bei einer einzelnen
-   TV-Programmseite).
+2. Die **Daten werden frisch geholt** (wenige Sekunden, im Hintergrund).
 3. Der Browser öffnet die Übersicht.
 
 Läuft die App bereits, startet ein erneuter Klick keinen zweiten Prozess,
@@ -125,12 +133,30 @@ genau diese Nummer mit der auf GitHub — aufgefrischt wird nur, wenn die dort
 Über den Knopf **„Einstellungen"** (oder http://127.0.0.1:5100/einstellungen):
 
 - **TMDB-API-Schlüssel** (siehe oben)
-- **Zeitraum** — wie viele Wochen im Voraus/zurück angezeigt werden
+- **Vorschau-Zeitraum** — wie viele Wochen im Voraus angezeigt werden
 - **Streaming-Anbieter** — welche der sieben Anbieter abgefragt werden
 - **Genres** — Einschränkung auf bestimmte Genres (kein Häkchen = alle)
 - **Merkliste** — Filme/Serien per Live-Suche hinzufügen, die immer
   angezeigt werden, unabhängig vom Genre-Filter
 - **Ausgeblendete Titel** — über den „Ausblenden"-Knopf an jeder Karte
+
+## Warum nicht *alles* angezeigt wird
+
+TMDB meldet für Deutschland weit mehr Starts, als für einen Menschen
+interessant sind — überwiegend Festival-Einzelvorführungen und Titel
+einzelner Ländermärkte. Gefiltert wird deshalb nach **Popularität** (ein Wert,
+den TMDB auch für noch nicht erschienene Titel führt) plus dem Vorhandensein
+eines Posters.
+
+Der naheliegendere Filter über die Zahl der Bewertungen funktioniert hier
+prinzipbedingt nicht: Angekündigtes ist noch von niemandem bewertet worden.
+In einem Vier-Wochen-Fenster kamen ganze zwei Kinostarts über diese Schwelle —
+durchgefallen wären ausgerechnet Titel wie *Street Fighter* oder *Clayface*.
+
+Die Schwellen stehen als `MIN_POPULARITAET_*` oben in
+[`scraper/tmdb.py`](scraper/tmdb.py) und sind dort mit den gemessenen Werten
+dokumentiert. Fehlen Titel, die dort hingehören: Wert senken. Steht zu viel
+Unbekanntes drin: Wert erhöhen.
   befüllt, hier wieder rückgängig zu machen
 
 Jede Speicherung stößt sofort einen neuen Datenabruf an (läuft im
@@ -145,7 +171,7 @@ Alles unterhalb von `%USERPROFILE%\streaming-info` bzw. `~/streaming-info`:
 |----------------------------------|-----------------------------------------------------|
 | `config/config.json`             | der TMDB-API-Schlüssel (bleibt bei Updates erhalten) |
 | `config/einstellungen.json`      | Zeitraum, Anbieter/Genre-Auswahl, Merkliste (bleibt bei Updates erhalten) |
-| `data/streaming.db`              | die geholten Titel und ihre Anbieter-Verfügbarkeit  |
+| `data/streaming.db`              | die geholten Titel und ihre angekündigten Starttermine |
 | `logs/start.log`                 | Meldungen des Startskripts                          |
 | `logs/webapp.log`                | Meldungen der Web-App                               |
 | `logs/scraper.log`               | Protokoll der Datenabrufe                           |

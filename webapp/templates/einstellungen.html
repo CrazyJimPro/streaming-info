@@ -42,11 +42,16 @@
     </div>
 
     <div class="einstellungen-block">
-      <h2>Zeitraum</h2>
+      <h2>Vorschau-Zeitraum</h2>
       <div class="zeitraum-feld">
-        <label for="zeitraum_wochen">Wie viele Wochen im Voraus/zurück anzeigen:</label>
-        <input type="number" id="zeitraum_wochen" name="zeitraum_wochen" min="1" max="26" value="{{ einstellungen.zeitraum_wochen }}">
+        <label for="zeitraum_wochen">Wie viele Wochen im Voraus anzeigen:</label>
+        <input type="number" id="zeitraum_wochen" name="zeitraum_wochen" min="1" max="52" value="{{ einstellungen.zeitraum_wochen }}">
       </div>
+      <p class="feld-hinweis">
+        Das Tool zeigt ausschließlich Titel, die noch anlaufen &mdash; nichts, was bereits verfügbar ist.
+        Je weiter der Zeitraum, desto mehr steht drin; sehr weit im Voraus wird allerdings
+        nur noch wenig angekündigt.
+      </p>
     </div>
 
     <div class="einstellungen-block">

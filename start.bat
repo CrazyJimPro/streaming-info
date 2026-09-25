@@ -212,7 +212,7 @@ if "!PORT_ANTWORTET!"=="JA" (
 
 echo.
 echo Oeffne http://127.0.0.1:5100 im Browser ...
-echo Die Daten werden dabei im Hintergrund frisch geholt ^(2-5 Minuten^),
+echo Die Daten werden dabei im Hintergrund frisch geholt ^(ein paar Sekunden^),
 echo die Seite aktualisiert sich von selbst, sobald der Lauf fertig ist.
 echo Dieses Fenster schliesst sich gleich von selbst, die App laeuft dann
 echo ohne Fenster weiter. Zum Beenden den Knopf "Beenden" oben auf der Seite

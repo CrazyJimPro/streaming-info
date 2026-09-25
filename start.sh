@@ -221,7 +221,7 @@ fi
 
 echo
 echo "Oeffne http://127.0.0.1:5100 im Browser ..."
-echo "Die Daten werden dabei im Hintergrund frisch geholt (2-5 Minuten),"
+echo "Die Daten werden dabei im Hintergrund frisch geholt (ein paar Sekunden),"
 echo "die Seite aktualisiert sich von selbst, sobald der Lauf fertig ist."
 echo "Die App laeuft im Hintergrund weiter, dieses Terminal wird nicht belegt."
 echo "Zum Beenden den Knopf \"Beenden\" oben auf der Seite benutzen - danach"
