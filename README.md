@@ -12,6 +12,12 @@ anläuft** — mit Startdatum. Drei Abschnitte:
 Was bereits läuft, steht bewusst **nicht** drin: die Übersicht beantwortet
 „worauf kann ich mich freuen", nicht „was liegt gerade im Katalog".
 
+Das Zeitfenster wandert dabei mit: Bei jedem Aufruf zählt ab **heute** bis
+zum eingestellten Vorschau-Ende. Was inzwischen angelaufen ist, verschwindet
+von selbst — und Termine, die TMDB nicht mehr meldet (abgesagt oder weit
+verschoben), werden beim nächsten Datenabruf entfernt, statt als bevorstehend
+stehen zu bleiben.
+
 Datenquelle ist [TMDB](https://www.themoviedb.org) (The Movie Database).
 
 **Eine Einschränkung vorweg, weil sie sichtbar ist:** Bei kommenden *Filmen*

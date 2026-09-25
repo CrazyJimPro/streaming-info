@@ -127,6 +127,27 @@ def speichere_starts(eintraege: list[StartEintrag], heute: date, db_pfad: Path =
         )
 
 
+def entferne_unbestaetigte_starts(anbieter: str, stand: date, db_pfad: Path = DB_PFAD) -> int:
+    """Entfernt Startereignisse eines Anbieters, die im Lauf vom 'stand' nicht
+    mehr gemeldet wurden.
+
+    Ohne das bliebe ein einmal gespeicherter Termin ewig stehen, auch wenn
+    TMDB ihn gar nicht mehr fuehrt - ein abgesagter oder weit verschobener
+    Start wuerde also weiter als bevorstehend angezeigt. Verglichen wird
+    'gesehen_am': was der aktuelle Lauf angefasst hat, traegt sein Datum.
+
+    Wichtig: Das darf nur je Anbieter geschehen und nur nach einem
+    ERFOLGREICHEN Abruf - sonst wuerde ein Netzwerkfehler die vorhandenen
+    Termine dieses Anbieters mit loeschen.
+    """
+    with closing(_verbindung(db_pfad)) as conn, conn:
+        cur = conn.execute(
+            "DELETE FROM starts WHERE anbieter = ? AND gesehen_am < ?",
+            (anbieter, stand.isoformat()),
+        )
+        return cur.rowcount
+
+
 def raeume_starts_auf(vor_datum: date, db_pfad: Path = DB_PFAD) -> int:
     """Entfernt Startereignisse, die laengst vorbei sind. Ohne das wuechse die
     Tabelle mit jedem Lauf weiter, obwohl nur Zukuenftiges angezeigt wird."""

@@ -20,6 +20,7 @@ from pathlib import Path
 from scraper.base import StartEintrag, TmdbApiSchluesselFehlt, TmdbFehler, neue_session
 from scraper.einstellungen import lade_anbieter, lade_api_schluessel, lade_einstellungen
 from scraper.storage import (
+    entferne_unbestaetigte_starts,
     init_db,
     markiere_quelle_erfolg,
     markiere_quelle_fehler,
@@ -102,10 +103,15 @@ def main() -> None:
             paare = neue_serien + staffeln
             speichere_titel([t for t, _ in paare])
             speichere_starts([s for _, s in paare], heute)
+            # Erst nach dem erfolgreichen Abruf aufraeumen: was dieser Lauf
+            # nicht mehr gemeldet hat, ist abgesagt oder aus dem Fenster
+            # gewandert und darf nicht als bevorstehend stehen bleiben.
+            veraltet = entferne_unbestaetigte_starts(anbieter_schluessel, heute)
             markiere_quelle_erfolg(anbieter_schluessel)
             logger.info(
-                "%s: %d neue Serien, %d Staffelstarts",
+                "%s: %d neue Serien, %d Staffelstarts%s",
                 anbieter_schluessel, len(neue_serien), len(staffeln),
+                f", {veraltet} nicht mehr gemeldete entfernt" if veraltet else "",
             )
         except TmdbFehler as exc:
             markiere_quelle_fehler(anbieter_schluessel, str(exc))
@@ -115,8 +121,13 @@ def main() -> None:
         paare = hole_digital_starts(session, api_key, heute, bis)
         speichere_titel([t for t, _ in paare])
         speichere_starts([s for _, s in paare], heute)
+        veraltet = entferne_unbestaetigte_starts("digital", heute)
         markiere_quelle_erfolg("digital")
-        logger.info("digital: %d angekuendigte Filmstarts", len(paare))
+        logger.info(
+            "digital: %d angekuendigte Filmstarts%s",
+            len(paare),
+            f", {veraltet} nicht mehr gemeldete entfernt" if veraltet else "",
+        )
     except TmdbFehler as exc:
         markiere_quelle_fehler("digital", str(exc))
         logger.error("digital fehlgeschlagen: %s", exc)
@@ -141,8 +152,13 @@ def main() -> None:
             ],
             heute,
         )
+        veraltet = entferne_unbestaetigte_starts("kino", heute)
         markiere_quelle_erfolg("kino")
-        logger.info("kino: %d Kinostarts zwischen %s und %s", len(kinostarts), heute, bis)
+        logger.info(
+            "kino: %d Kinostarts zwischen %s und %s%s",
+            len(kinostarts), heute, bis,
+            f", {veraltet} nicht mehr gemeldete entfernt" if veraltet else "",
+        )
     except TmdbFehler as exc:
         markiere_quelle_fehler("kino", str(exc))
         logger.error("kino fehlgeschlagen: %s", exc)
