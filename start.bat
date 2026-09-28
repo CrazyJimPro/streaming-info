@@ -144,22 +144,46 @@ if not defined PYTHON_EXE (
 )
 
 rem --- 2. Virtuelle Umgebung + Abhaengigkeiten, falls noch nicht vorhanden ---
+rem     Geprueft wird, ob die Abhaengigkeiten wirklich benutzbar sind - nicht
+rem     bloss, ob venv\Scripts\python.exe existiert. Bricht ein frueherer Lauf
+rem     beim "pip install" ab, bleibt sonst eine Umgebung MIT Interpreter, aber
+rem     OHNE Flask zurueck; die Einrichtung wurde dann stillschweigend
+rem     uebersprungen und die App stuerzte bei jedem Start mit
+rem     "ModuleNotFoundError: No module named 'flask'" ab (auf einer Linux-VM
+rem     genau so passiert, siehe start.sh).
+rem     Bewusst flach mit goto statt verschachtelter Klammerbloecke: cmd.exe ist
+rem     darin heikel (siehe die Label-Historie weiter unten).
+set "SI_SETUP_NOETIG="
+if not exist "venv\Scripts\python.exe" set "SI_SETUP_NOETIG=1"
+if exist "venv\Scripts\python.exe" venv\Scripts\python.exe -c "import flask" >nul 2>nul
+if exist "venv\Scripts\python.exe" if errorlevel 1 set "SI_SETUP_NOETIG=1"
+if not defined SI_SETUP_NOETIG goto :umgebung_fertig
+
+if exist "venv\Scripts\python.exe" echo Die virtuelle Umgebung ist unvollstaendig ^(Abhaengigkeiten fehlen^) - hole das nach.
+if not exist "venv\Scripts\python.exe" echo Richte virtuelle Umgebung ein ^(einmalig, dauert etwas^)...
+if not exist "venv\Scripts\python.exe" %PYTHON_EXE% -m venv venv
 if not exist "venv\Scripts\python.exe" (
-    echo Richte virtuelle Umgebung ein ^(einmalig, dauert etwas^)...
-    %PYTHON_EXE% -m venv venv
-    if errorlevel 1 (
-        echo Fehler beim Anlegen der virtuellen Umgebung.
-        pause
-        exit /b 1
-    )
-    venv\Scripts\python.exe -m pip install --quiet --upgrade pip
-    venv\Scripts\python.exe -m pip install --quiet -r requirements.txt
-    if errorlevel 1 (
-        echo Fehler beim Installieren der Abhaengigkeiten.
-        pause
-        exit /b 1
-    )
+    echo Fehler beim Anlegen der virtuellen Umgebung.
+    pause
+    exit /b 1
 )
+venv\Scripts\python.exe -m pip install --quiet --upgrade pip
+venv\Scripts\python.exe -m pip install --quiet -r requirements.txt
+if errorlevel 1 (
+    echo Fehler beim Installieren der Abhaengigkeiten.
+    pause
+    exit /b 1
+)
+rem Nachkontrolle: ein stiller Teilerfolg waere genau der Zustand, der uns
+rem hierher gebracht hat.
+venv\Scripts\python.exe -c "import flask" >nul 2>nul
+if errorlevel 1 (
+    echo Fehler: Flask liess sich nicht installieren - siehe Meldungen oben.
+    pause
+    exit /b 1
+)
+echo Abhaengigkeiten sind vollstaendig.
+:umgebung_fertig
 
 rem --- 3. Desktop-Verknuepfung anlegen, falls noch nicht vorhanden - startet
 rem     kuenftig per Doppelklick ohne sichtbares Konsolenfenster (siehe
@@ -236,13 +260,26 @@ if not exist "!APP_EXE!" set "APP_EXE=%~dp0venv\Scripts\python.exe"
     echo $app = '"%~dp0webapp\app.py"'
     echo Start-Process -FilePath $exe -ArgumentList $app -WorkingDirectory '%~dp0'
     rem Browser erst oeffnen, wenn Port 5100 antwortet - sonst zeigt er kurz
-    rem eine Fehlerseite.
+    rem eine Fehlerseite. Kommt die App gar nicht hoch, wurde der Browser
+    rem frueher trotzdem geoeffnet: der Nutzer sah nur "Verbindung
+    rem fehlgeschlagen", waehrend der echte Grund unbemerkt in
+    rem logs\webapp.log stand. Jetzt zeigt ein Fenster die letzten Zeilen.
+    echo $ok = $false
     echo for ^($i = 0; $i -lt 30; $i++^) {
     echo     Start-Sleep -Milliseconds 500
     echo     $c = New-Object Net.Sockets.TcpClient
-    echo     try { $c.Connect^('127.0.0.1',5100^); $c.Close^(^); break } catch { }
+    echo     try { $c.Connect^('127.0.0.1',5100^); $c.Close^(^); $ok = $true; break } catch { }
     echo }
-    echo Start-Process 'http://127.0.0.1:5100'
+    echo if ^($ok^) {
+    echo     Start-Process 'http://127.0.0.1:5100'
+    echo } else {
+    echo     $log = Join-Path '%~dp0' 'logs\webapp.log'
+    echo     $letzte = '^(kein Protokoll vorhanden^)'
+    echo     if ^(Test-Path $log^) { $letzte = ^(Get-Content $log -Tail 15^) -join [Environment]::NewLine }
+    echo     Add-Type -AssemblyName System.Windows.Forms
+    echo     $text = 'Streaming-Info konnte nicht gestartet werden.' + [Environment]::NewLine + [Environment]::NewLine + $letzte + [Environment]::NewLine + [Environment]::NewLine + 'Vollstaendiges Protokoll: ' + $log
+    echo     [System.Windows.Forms.MessageBox]::Show^($text, 'Streaming-Info', 'OK', 'Error'^) ^| Out-Null
+    echo }
 )
 powershell -NoProfile -ExecutionPolicy Bypass -File "%TEMP%\si_startapp.ps1"
 del "%TEMP%\si_startapp.ps1" >nul 2>nul

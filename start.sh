@@ -168,20 +168,79 @@ if ! command -v python3 >/dev/null 2>&1; then
     fi
 fi
 
-# venv-Modul ist auf manchen Distros ein separates Paket
-if ! python3 -m venv --help >/dev/null 2>&1; then
+# venv-Modul ist auf manchen Distros ein separates Paket.
+# ACHTUNG, hier lag der Hund begraben: "python3 -m venv --help" ist als
+# Pruefung untauglich, denn venv selbst steckt in der Standardbibliothek und
+# antwortet auch dann, wenn das Paket python3-venv fehlt. Was dann fehlt, ist
+# ensurepip - "python3 -m venv venv" legt das Verzeichnis samt bin/python an,
+# scheitert erst danach an ensurepip und hinterlaesst eine Umgebung OHNE pip.
+# Genau so entstand auf einer Mint-VM ein venv, in dem Flask nie ankam.
+if ! python3 -c "import ensurepip" >/dev/null 2>&1; then
     if command -v apt-get >/dev/null 2>&1; then
-        echo "Installiere python3-venv nach..."
-        sudo apt-get update -qq && sudo apt-get install -y python3-venv
+        echo "Das Paket python3-venv fehlt (ohne ensurepip bleibt die Umgebung ohne pip)."
+        echo "Installiere es nach - dafuer wird das sudo-Passwort gebraucht..."
+        sudo apt-get update -qq && sudo apt-get install -y python3-venv python3-pip
+    fi
+    if ! python3 -c "import ensurepip" >/dev/null 2>&1; then
+        echo
+        echo "FEHLER: python3-venv fehlt weiterhin. Bitte einmalig im Terminal ausfuehren:"
+        echo "    sudo apt-get install -y python3-venv python3-pip"
+        echo "und danach diese Verknuepfung erneut starten."
+        echo
+        echo "(Wird per Desktop-Verknuepfung ohne Terminal gestartet, kann die"
+        echo " Passwortabfrage von sudo nicht erscheinen - dann hilft nur der"
+        echo " einmalige Aufruf von Hand.)"
+        exit 1
     fi
 fi
 
 # --- 2. Virtuelle Umgebung + Abhaengigkeiten, falls noch nicht vorhanden ---
-if [ ! -x "venv/bin/python" ]; then
-    echo "Richte virtuelle Umgebung ein (einmalig, dauert etwas)..."
-    python3 -m venv venv || { echo "Fehler beim Anlegen der virtuellen Umgebung."; exit 1; }
+# Geprueft wird, ob die Abhaengigkeiten wirklich benutzbar sind - nicht bloss,
+# ob venv/bin/python existiert. Grund (auf einer Mint-VM aufgetreten): bricht
+# ein frueherer Lauf beim "pip install" ab, bleibt ein venv MIT Interpreter,
+# aber OHNE Flask zurueck. Die alte Pruefung sah nur den Interpreter und
+# uebersprang die Einrichtung stillschweigend - die App stuerzte danach bei
+# jedem Start mit "ModuleNotFoundError: No module named 'flask'" ab, waehrend
+# dieses Skript unbeirrt den Browser oeffnete.
+if [ -x "venv/bin/python" ] && ./venv/bin/python -c "import flask" >/dev/null 2>&1; then
+    : # alles vorhanden
+else
+    if [ -x "venv/bin/python" ]; then
+        echo "Die virtuelle Umgebung ist unvollstaendig (Abhaengigkeiten fehlen)."
+        echo "Ein frueherer Einrichtungslauf wurde wohl abgebrochen - hole das nach."
+    else
+        echo "Richte virtuelle Umgebung ein (einmalig, dauert etwas)..."
+    fi
+
+    # Bei einem Fehlschlag das Fragment wegraeumen: ein liegengebliebenes,
+    # halbes venv ist genau der Zustand, der den naechsten Start wieder
+    # stillschweigend daran vorbeilaufen laesst.
+    [ -x "venv/bin/python" ] || python3 -m venv venv \
+        || { rm -rf venv; echo "Fehler beim Anlegen der virtuellen Umgebung."; exit 1; }
+
+    # Ohne pip im venv ist nichts nachzuinstallieren. Das passiert, wenn
+    # python3-venv unvollstaendig ist (ensurepip fehlt) - dann hilft nur,
+    # die Umgebung wegzuwerfen und neu anzulegen.
+    if ! ./venv/bin/python -m pip --version >/dev/null 2>&1; then
+        echo "Im venv fehlt pip - lege die Umgebung neu an..."
+        rm -rf venv
+        python3 -m venv venv || { echo "Fehler beim Anlegen der virtuellen Umgebung."; exit 1; }
+        ./venv/bin/python -m pip --version >/dev/null 2>&1 || {
+            echo "Fehler: die virtuelle Umgebung kommt ohne pip. Bitte einmalig ausfuehren:"
+            echo "    sudo apt-get install -y python3-venv python3-pip"
+            echo "und dieses Skript danach erneut starten."
+            exit 1
+        }
+    fi
+
     ./venv/bin/pip install --quiet --upgrade pip || { echo "Fehler beim pip-Upgrade."; exit 1; }
     ./venv/bin/pip install --quiet -r requirements.txt || { echo "Fehler beim Installieren der Abhaengigkeiten."; exit 1; }
+
+    # Nachkontrolle: ein stiller Teilerfolg waere genau der Zustand, der uns
+    # hierher gebracht hat.
+    ./venv/bin/python -c "import flask" >/dev/null 2>&1 \
+        || { echo "Fehler: Flask liess sich nicht installieren - siehe Meldungen oben."; exit 1; }
+    echo "Abhaengigkeiten sind vollstaendig."
 fi
 
 PROJEKT_PFAD="$(pwd)"
@@ -228,8 +287,35 @@ echo "Zum Beenden den Knopf \"Beenden\" oben auf der Seite benutzen - danach"
 echo "laeuft nichts mehr im Hintergrund."
 echo
 nohup "$VENV_PYTHON" webapp/app.py >> logs/webapp.log 2>&1 &
+GESTARTET=""
 for _ in $(seq 1 20); do
-    if curl -s -o /dev/null --connect-timeout 1 http://127.0.0.1:5100/ 2>/dev/null; then break; fi
+    if curl -s -o /dev/null --connect-timeout 1 http://127.0.0.1:5100/ 2>/dev/null; then GESTARTET=1; break; fi
     sleep 1
 done
+
+# Frueher wurde der Browser bedingungslos geoeffnet - kam die App nicht hoch,
+# sah der Nutzer nur "Verbindung fehlgeschlagen" und hatte keinen Anhaltspunkt,
+# waehrend der eigentliche Fehler unbemerkt in logs/webapp.log stand. Deshalb:
+# erst pruefen, und im Fehlerfall den echten Grund zeigen statt einer toten
+# Adresse.
+if [ -z "$GESTARTET" ]; then
+    echo
+    echo "FEHLER: Die Web-App ist nicht gestartet. Letzte Meldungen aus logs/webapp.log:"
+    echo "---------------------------------------------------------------"
+    tail -15 logs/webapp.log 2>/dev/null || echo "(logs/webapp.log ist leer oder fehlt)"
+    echo "---------------------------------------------------------------"
+    echo "Das vollstaendige Protokoll steht in $(pwd)/logs/webapp.log"
+
+    # Beim Start per Desktop-Verknuepfung (Terminal=false) sieht niemand diese
+    # Ausgabe - deshalb zusaetzlich ein Fenster bzw. eine Benachrichtigung,
+    # sofern die Desktop-Umgebung so etwas mitbringt.
+    FEHLERTEXT="Streaming-Info konnte nicht gestartet werden.\n\nEinzelheiten in:\n$(pwd)/logs/webapp.log"
+    if command -v zenity >/dev/null 2>&1; then
+        zenity --error --no-wrap --title="Streaming-Info" --text="$FEHLERTEXT" >/dev/null 2>&1 &
+    elif command -v notify-send >/dev/null 2>&1; then
+        notify-send "Streaming-Info" "Start fehlgeschlagen - siehe logs/webapp.log" >/dev/null 2>&1 || true
+    fi
+    exit 1
+fi
+
 xdg-open http://127.0.0.1:5100 >/dev/null 2>&1 || true
