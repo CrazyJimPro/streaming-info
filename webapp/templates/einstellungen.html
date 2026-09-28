@@ -30,6 +30,14 @@
   <div class="gespeichert-hinweis">Gespeichert &ndash; die Übersicht wird jetzt im Hintergrund neu geladen.</div>
   {% endif %}
 
+  {% if eingespielt %}
+  <div class="gespeichert-hinweis">Sicherung eingespielt: {{ eingespielt }}</div>
+  {% endif %}
+
+  {% if fehler %}
+  <div class="fehler-hinweis">{{ fehler }}</div>
+  {% endif %}
+
   <form method="post" action="{{ url_for('einstellungen_seite') }}">
 
     <div class="einstellungen-block">
@@ -120,6 +128,40 @@
 
     <button class="primaer" type="submit">Speichern</button>
   </form>
+
+  <!-- Bewusst ausserhalb des Formulars oben: ein Knopf darin wuerde beim
+       Anklicken das Einstellungsformular abschicken. -->
+  <div class="einstellungen-block">
+    <h2>Sicherung</h2>
+    <p class="hinweis">
+      Gesichert werden Merkliste, ausgeblendete Titel, Zeitraum, Anbieter- und Genre-Auswahl
+      sowie der TMDB-Schlüssel &ndash; also alles, was sich nicht von selbst wiederbeschafft.
+      Die Termine selbst kommen beim nächsten Aktualisieren ohnehin neu und sind deshalb nicht dabei.
+    </p>
+    <p class="feld-hinweis">
+      Gesichert wird der <strong>gespeicherte</strong> Stand. Falls oben noch etwas offen ist:
+      erst „Speichern“, dann sichern. Weil der TMDB-Schlüssel mit in der Datei steht,
+      gehört sie nicht in fremde Hände.
+    </p>
+    <a class="knopf" href="{{ url_for('sicherung_herunterladen') }}">Sicherung erstellen</a>
+  </div>
+
+  <div class="einstellungen-block" id="sicherung-einspielen">
+    <h2>Sicherung einspielen</h2>
+    <p class="hinweis">
+      Ersetzt die aktuellen Einstellungen durch den Stand aus einer Sicherungsdatei.
+      Die Datei darf überall liegen &ndash; Downloads, USB-Stick, Netzlaufwerk.
+    </p>
+    <p class="feld-hinweis">
+      Der bisherige Stand wird vorher automatisch als <code>vor-wiederherstellung-&lt;Zeit&gt;.json</code>
+      im Ordner <code>config</code> abgelegt und lässt sich genauso wieder einspielen.
+    </p>
+    <form method="post" action="{{ url_for('sicherung_einspielen') }}" enctype="multipart/form-data"
+          onsubmit="return confirm('Die aktuelle Merkliste, die ausgeblendeten Titel und alle übrigen Einstellungen werden durch die Sicherung ersetzt. Fortfahren?');">
+      <input type="file" name="datei" accept=".json,application/json" required>
+      <button class="knopf" type="submit">Sicherung einspielen</button>
+    </form>
+  </div>
 
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
   <script src="{{ url_for('static', filename='einstellungen.js') }}"></script>

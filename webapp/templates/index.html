@@ -36,6 +36,19 @@
     </div>
   </header>
 
+  {% if einrichtung_offen %}
+  <div class="setup-hinweis">
+    <strong>Schon eine Sicherung von einer früheren Installation?</strong>
+    Merkliste, ausgeblendete Titel und der TMDB-Schlüssel lassen sich aus einer Datei
+    <code>streaming-info-&lt;Datum&gt;.json</code> übernehmen &ndash; egal ob sie in den Downloads,
+    auf einem USB-Stick oder einem Netzlaufwerk liegt.
+    <a href="{{ url_for('einstellungen_seite') }}#sicherung-einspielen">Sicherung einspielen</a>
+    <form method="post" action="{{ url_for('einrichtung_erledigt') }}" style="display:inline">
+      <button type="submit">Brauche ich nicht</button>
+    </form>
+  </div>
+  {% endif %}
+
   {% if api_schluessel_fehlt %}
   <div class="setup-hinweis">
     <strong>Noch kein TMDB-API-Schlüssel hinterlegt.</strong>

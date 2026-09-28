@@ -364,3 +364,21 @@ input[type="password"], input[type="text"] {
   width: 100%;
   max-width: 30rem;
 }
+
+/* Gegenstueck zu .gespeichert-hinweis fuer abgelehnte Sicherungen. */
+.fehler-hinweis {
+  background: #a3232322;
+  border: 1px solid #a32323;
+  color: #d04a4a;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Datei-Auswahl beim Einspielen einer Sicherung. */
+input[type="file"] {
+  display: block;
+  margin-bottom: 0.8rem;
+  color: var(--fg);
+  max-width: 30rem;
+}

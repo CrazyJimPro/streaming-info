@@ -151,6 +151,47 @@ genau diese Nummer mit der auf GitHub — aufgefrischt wird nur, wenn die dort
   mit dem Vermerk *„Noch kein Termin bekannt"* — das ist bei angekündigten
   Staffeln häufig und ändert sich, sobald der Sender einen Termin nennt
 - **Ausgeblendete Titel** — über den „Ausblenden"-Knopf an jeder Karte
+  befüllt, hier wieder rückgängig zu machen
+
+Jede Speicherung stößt sofort einen neuen Datenabruf an (läuft im
+Hintergrund) — die Übersicht zeigt danach den neuen Stand, ohne dass die
+App neu gestartet werden muss.
+
+## Sicherung und Wiederherstellung
+
+Gesichert wird, was sich nicht von selbst wiederbeschafft: **Merkliste,
+ausgeblendete Titel, Zeitraum, Anbieter- und Genre-Auswahl sowie der
+TMDB-Schlüssel**. Die Termine selbst sind nicht dabei — die holt der nächste
+Abruf in wenigen Sekunden ohnehin neu.
+
+**Sicherung erstellen:** Einstellungen → ganz unten **„Sicherung erstellen"**.
+Der Browser lädt eine Datei `streaming-info-<Datum>.json` herunter (bei den
+meisten Einstellungen in den Ordner *Downloads*). Gesichert wird der
+*gespeicherte* Stand — falls oben noch etwas offen ist: erst „Speichern".
+
+> Weil der TMDB-Schlüssel mit in der Datei steht, gehört sie nicht in fremde
+> Hände. Zum Mitnehmen auf einen anderen eigenen Rechner ist sie gedacht,
+> nicht zum Weitergeben.
+
+**Sicherung einspielen:** Einstellungen → **„Sicherung einspielen"** → Datei
+auswählen. Die Datei darf überall liegen: Downloads, USB-Stick,
+Netzlaufwerk. Vor dem Ersetzen wird der bisherige Stand automatisch als
+`config/vor-wiederherstellung-<Zeit>.json` abgelegt — im selben Format, also
+genauso wieder einspielbar, falls die eingespielte Sicherung doch die falsche
+war. Die letzten zehn dieser Kopien bleiben liegen.
+
+**Auf einem neuen Rechner:** Nach der Installation zeigt die Startseite von
+sich aus den Hinweis, dass sich eine vorhandene Sicherung einspielen lässt.
+Er verschwindet, sobald etwas eingerichtet, eine Sicherung eingespielt oder
+der Hinweis weggeklickt wurde.
+
+Abgelehnt wird eine Datei, die keine Streaming-Info-Sicherung ist oder aus
+einer **neueren** Programmfassung stammt; die bisherigen Einstellungen bleiben
+dann unangetastet. Einzelne unlesbare Einträge führen nicht zur Ablehnung —
+sie werden übergangen und in der Rückmeldung gezählt.
+
+Ein Update braucht **keine** Sicherung: `config/einstellungen.json` und
+`config/config.json` werden beim Selbstupdate nicht angefasst.
 
 ## Warum nicht *alles* angezeigt wird
 
@@ -169,11 +210,6 @@ Die Schwellen stehen als `MIN_POPULARITAET_*` oben in
 [`scraper/tmdb.py`](scraper/tmdb.py) und sind dort mit den gemessenen Werten
 dokumentiert. Fehlen Titel, die dort hingehören: Wert senken. Steht zu viel
 Unbekanntes drin: Wert erhöhen.
-  befüllt, hier wieder rückgängig zu machen
-
-Jede Speicherung stößt sofort einen neuen Datenabruf an (läuft im
-Hintergrund) — die Übersicht zeigt danach den neuen Stand, ohne dass die
-App neu gestartet werden muss.
 
 ## Wo liegt was?
 
@@ -183,6 +219,7 @@ Alles unterhalb von `%USERPROFILE%\streaming-info` bzw. `~/streaming-info`:
 |----------------------------------|-----------------------------------------------------|
 | `config/config.json`             | der TMDB-API-Schlüssel (bleibt bei Updates erhalten) |
 | `config/einstellungen.json`      | Zeitraum, Anbieter/Genre-Auswahl, Merkliste (bleibt bei Updates erhalten) |
+| `config/vor-wiederherstellung-*.json` | der Stand vor dem letzten Einspielen einer Sicherung (die letzten zehn) |
 | `data/streaming.db`              | die geholten Titel und ihre angekündigten Starttermine |
 | `logs/start.log`                 | Meldungen des Startskripts                          |
 | `logs/webapp.log`                | Meldungen der Web-App                               |

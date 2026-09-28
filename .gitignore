@@ -14,3 +14,7 @@ config/config.json
 # Die Vorlage selbst heisst config/einstellungen.default.json und bleibt
 # versioniert.
 config/einstellungen.json
+
+# Sicherheitskopie des Standes vor dem Einspielen einer Sicherung -
+# entsteht beim Nutzer, gehoert nicht ins Repo.
+config/vor-wiederherstellung-*.json

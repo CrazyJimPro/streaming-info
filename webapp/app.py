@@ -37,6 +37,12 @@ from scraper.einstellungen import (  # noqa: E402
 )
 from scraper.base import TmdbFehler, neue_session  # noqa: E402
 from scraper.filter import filtere_zeilen  # noqa: E402
+from scraper.sicherung import (  # noqa: E402
+    SicherungsFehler,
+    erstelle_sicherung,
+    sicherungs_dateiname,
+    spiele_sicherung_ein,
+)
 from scraper.storage import (  # noqa: E402
     DB_PFAD,
     hole_merkliste_eintraege,
@@ -47,6 +53,11 @@ from scraper.storage import (  # noqa: E402
 from scraper.tmdb import suche_titel  # noqa: E402
 
 app = Flask(__name__)
+
+# Eine Sicherung ist wenige Kilobyte gross. Das Limit faengt nur den Fall ab,
+# dass versehentlich etwas ganz anderes hochgeladen wird - ohne es wuerde
+# Flask die Datei erst komplett annehmen und dann verwerfen.
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
 TMDB_POSTER_BASIS = "https://image.tmdb.org/t/p/w300"
 
@@ -307,6 +318,22 @@ def index():
     status = _status_aufbereiten(hole_quellen_status(db_pfad=DB_PFAD))
     api_schluessel_fehlt = not lade_api_schluessel()
 
+    # Einmaliger Wegweiser nach einer frischen Installation - das Gegenstueck
+    # zur Frage "Daten aus einer Sicherung uebernehmen?", die beim Abo-Tracker
+    # das Installationsprogramm stellt. Hier gibt es keines: die App fragt
+    # deshalb selbst, und zwar sichtbar auf der Startseite, weil der uebliche
+    # Start ueber die Desktop-Verknuepfung gar kein Fenster zeigt, in dem eine
+    # Konsolenfrage auffallen wuerde.
+    # Der Merker steht in den Einstellungen selbst, nicht im Arbeitsspeicher:
+    # sonst waere der Hinweis nach dem ersten Neustart weg, obwohl noch nichts
+    # eingerichtet ist. Die Pruefung auf leere Listen faengt zusaetzlich
+    # bestehende Installationen ab, die den Merker noch nicht kennen.
+    einrichtung_offen = (
+        not einstellungen.get("einrichtung_erledigt")
+        and not einstellungen.get("merkliste")
+        and not einstellungen.get("ausgeblendet")
+    )
+
     return render_template(
         "index.html",
         streaming=streaming,
@@ -319,8 +346,18 @@ def index():
         zeitraum_wochen=zeitraum_wochen,
         scan=_scan_status,
         api_schluessel_fehlt=api_schluessel_fehlt,
+        einrichtung_offen=einrichtung_offen,
         kino_farbe=next((a["farbe"] for a in anbieter_karte.values() if a["schluessel"] == "kino"), "#e63946"),
     )
+
+
+@app.route("/einrichtung-erledigt", methods=["POST"])
+def einrichtung_erledigt():
+    """Blendet den Wegweiser fuer frische Installationen dauerhaft aus."""
+    daten = lade_einstellungen()
+    daten["einrichtung_erledigt"] = True
+    speichere_einstellungen(daten)
+    return redirect(url_for("index"))
 
 
 @app.route("/scan-status")
@@ -379,6 +416,10 @@ def einstellungen_seite():
         if api_schluessel:
             speichere_api_schluessel(api_schluessel)
 
+        # Wer hier speichert, hat sich eingerichtet - der Wegweiser auf der
+        # Startseite hat sich damit erledigt.
+        daten["einrichtung_erledigt"] = True
+
         speichere_einstellungen(daten)
         _scan_im_hintergrund_starten()
         return redirect(url_for("einstellungen_seite", gespeichert=1))
@@ -390,7 +431,74 @@ def einstellungen_seite():
         genres=sorted(genres.items(), key=lambda kv: kv[1]),
         api_schluessel_vorhanden=bool(lade_api_schluessel()),
         gespeichert=request.args.get("gespeichert") == "1",
+        eingespielt=request.args.get("eingespielt"),
+        fehler=request.args.get("fehler"),
     )
+
+
+@app.route("/sicherung")
+def sicherung_herunterladen():
+    """Laedt die persoenlichen Einstellungen als JSON-Datei herunter.
+
+    Bewusst ein Download statt einer Datei irgendwo im Projektordner: so
+    landet die Sicherung dort, wo der Browser hinspeichert, und laesst sich
+    von dort auf einen USB-Stick oder einen anderen Rechner mitnehmen.
+    """
+    inhalt = json.dumps(erstelle_sicherung(_version()), ensure_ascii=False, indent=2) + "\n"
+    return app.response_class(
+        inhalt,
+        mimetype="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="{sicherungs_dateiname()}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@app.route("/sicherung-einspielen", methods=["POST"])
+def sicherung_einspielen():
+    """Spielt eine hochgeladene Sicherungsdatei ein.
+
+    Der Weg ueber den Datei-Dialog des Browsers ist Absicht: so laesst sich
+    eine Sicherung von ueberall holen - Downloads, USB-Stick, Netzlaufwerk -,
+    ohne dass das Programm Suchpfade fest verdrahtet.
+    """
+    datei = request.files.get("datei")
+    if datei is None or not datei.filename:
+        return redirect(url_for("einstellungen_seite", fehler="Keine Datei ausgewählt."))
+
+    try:
+        bericht = spiele_sicherung_ein(
+            datei.read(),
+            bekannte_anbieter=[a["schluessel"] for a in lade_anbieter()],
+            version=_version(),
+        )
+    except SicherungsFehler as fehler:
+        return redirect(url_for("einstellungen_seite", fehler=str(fehler)))
+    except OSError as fehler:
+        logging.getLogger("webapp").exception("Sicherung konnte nicht eingespielt werden")
+        return redirect(url_for("einstellungen_seite", fehler=f"Die Einstellungen ließen sich nicht schreiben: {fehler}"))
+
+    meldung = f"{bericht['merkliste']} gemerkte Titel, {bericht['ausgeblendet']} ausgeblendet"
+    if bericht["schluessel_uebernommen"]:
+        meldung += ", TMDB-Schlüssel übernommen"
+    if bericht["erstellt_am"]:
+        meldung += f" (Sicherung vom {bericht['erstellt_am'][:10]})"
+    if bericht["notizen"]:
+        meldung += " – " + ", ".join(bericht["notizen"])
+    if bericht["sicherheitskopie"]:
+        meldung += f". Der bisherige Stand liegt als {bericht['sicherheitskopie']} im Ordner config."
+
+    logging.getLogger("webapp").info("Sicherung eingespielt: %s", meldung)
+    _scan_im_hintergrund_starten()
+    return redirect(url_for("einstellungen_seite", eingespielt=meldung))
+
+
+@app.errorhandler(413)
+def _datei_zu_gross(_fehler):
+    """Ohne diesen Handler bekaeme der Nutzer Flasks nackte Fehlerseite zu
+    sehen und muesste selbst zurueckfinden."""
+    return redirect(url_for("einstellungen_seite", fehler="Die Datei ist zu groß für eine Sicherung (über 5 MB)."))
 
 
 @app.route("/titel-suche")
