@@ -248,8 +248,11 @@ section.abschnitt h2 {
   white-space: nowrap;
 }
 
-.karte .ausblenden-formular {
+.karte .karten-aktionen {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .karte .ausblenden-formular button {

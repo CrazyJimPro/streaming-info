@@ -193,6 +193,9 @@ werden einzeln bei TMDB abgefragt — ohne jeden Filter.
 Zum Entfernen: in der Liste beim Titel auf *entfernen* klicken, dann wieder
 *Speichern*. Schneller geht es direkt auf der Startseite: Jede Karte in der
 Merkliste hat einen Knopf **„Nicht mehr merken"**.
+Umgekehrt hat **jede Karte** in der Übersicht (Streaming, Kino, Digital) einen Knopf
+**„⭐ Merken"** — so wanderst du eine Serie, die dir beim Start auffällt, mit einem
+Klick auf die Merkliste.
 
 ### Was du erwarten kannst
 

@@ -340,6 +340,7 @@ def index():
         digital=digital,
         kino=kino,
         merkliste=merkliste,
+        gemerkt_ids={(m["tmdb_id"], m["medientyp"]) for m in einstellungen.get("merkliste", [])},
         status=status,
         heute=heute,
         bis=bis,
@@ -573,16 +574,19 @@ def suche():
 
 @app.route("/merken", methods=["POST"])
 def merken():
-    """Setzt einen Suchtreffer auf die Merkliste (Knopf in der Suche) - das
-    Gegenstueck zur Live-Suche in den Einstellungen, ohne den Umweg dorthin."""
+    """Setzt einen Titel auf die Merkliste - per Knopf in der Suche (mit 'q',
+    dann geht es dorthin zurueck) oder an einer Karte der Uebersicht (ohne 'q',
+    dann zurueck zur Startseite). Das Gegenstueck zur Live-Suche in den
+    Einstellungen, ohne den Umweg dorthin."""
     try:
         tmdb_id = int(request.form["tmdb_id"])
     except (KeyError, ValueError):
         return redirect(url_for("index"))
     medientyp = request.form.get("medientyp")
     suchtext = request.form.get("q", "")
+    zurueck = url_for("suche", q=suchtext) if suchtext else url_for("index")
     if medientyp not in ("film", "serie"):
-        return redirect(url_for("suche", q=suchtext))
+        return redirect(zurueck)
     daten = lade_einstellungen()
     merkliste = daten.setdefault("merkliste", [])
     if not any(e["tmdb_id"] == tmdb_id and e["medientyp"] == medientyp for e in merkliste):
@@ -591,7 +595,7 @@ def merken():
         # Der Termin des neuen Titels wird erst beim Scan abgefragt; ohne ihn
         # stuende er auf der Startseite zunaechst als "Noch kein Termin bekannt".
         _scan_im_hintergrund_starten()
-    return redirect(url_for("suche", q=suchtext))
+    return redirect(zurueck)
 
 
 @app.route("/entmerken", methods=["POST"])

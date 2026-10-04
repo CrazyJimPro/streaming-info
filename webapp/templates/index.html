@@ -102,20 +102,32 @@
           {% endfor %}
         {% endif %}
       </div>
-      {% if gemerkt %}
-      <form class="ausblenden-formular" method="post" action="{{ url_for('entmerken') }}">
-        <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
-        <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
-        <button type="submit">Nicht mehr merken</button>
-      </form>
-      {% else %}
-      <form class="ausblenden-formular" method="post" action="{{ url_for('ausblenden') }}">
-        <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
-        <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
-        <input type="hidden" name="titel" value="{{ eintrag.titel }}">
-        <button type="submit">Ausblenden</button>
-      </form>
-      {% endif %}
+      <div class="karten-aktionen">
+        {# Merken/Entmerken gehoeren immer als Paar an die Karte: wer einen Titel
+           hier merken kann, muss ihn hier auch wieder loswerden koennen. #}
+        {% if gemerkt or (eintrag.tmdb_id, eintrag.medientyp) in gemerkt_ids %}
+        <form class="ausblenden-formular" method="post" action="{{ url_for('entmerken') }}">
+          <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
+          <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
+          <button type="submit">⭐ Nicht mehr merken</button>
+        </form>
+        {% else %}
+        <form class="ausblenden-formular" method="post" action="{{ url_for('merken') }}">
+          <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
+          <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
+          <input type="hidden" name="titel" value="{{ eintrag.titel }}">
+          <button type="submit">⭐ Merken</button>
+        </form>
+        {% endif %}
+        {% if not gemerkt %}
+        <form class="ausblenden-formular" method="post" action="{{ url_for('ausblenden') }}">
+          <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
+          <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
+          <input type="hidden" name="titel" value="{{ eintrag.titel }}">
+          <button type="submit">Ausblenden</button>
+        </form>
+        {% endif %}
+      </div>
     </div>
   </article>
   {% endmacro %}
