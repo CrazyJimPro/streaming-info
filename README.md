@@ -191,7 +191,8 @@ werden einzeln bei TMDB abgefragt — ohne jeden Filter.
    gespeichert.**
 
 Zum Entfernen: in der Liste beim Titel auf *entfernen* klicken, dann wieder
-*Speichern*.
+*Speichern*. Schneller geht es direkt auf der Startseite: Jede Karte in der
+Merkliste hat einen Knopf **„Nicht mehr merken"**.
 
 ### Was du erwarten kannst
 
