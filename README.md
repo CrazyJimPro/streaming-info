@@ -154,6 +154,11 @@ Du suchst einen Film oder eine Serie und weißt nicht, wo sie läuft — oder ob
 3. Zu jedem Treffer steht, wo er in Deutschland abrufbar ist, getrennt nach
    **Im Abo**, **Kostenlos**, **Gratis mit Werbung**, **Leihen** und **Kaufen**.
 
+Gefällt dir ein Treffer, setzt **⭐ Merken** ihn direkt auf die Merkliste — 
+ohne Umweg über die Einstellungen. Danach steht er ganz oben auf der Startseite, 
+sobald TMDB einen Starttermin kennt (sonst mit „Noch kein Termin bekannt“). 
+Entfernen geht weiter in den Einstellungen.
+
 Gesucht wird bei **allen** Anbietern, die TMDB kennt — nicht nur bei den
 sieben aus den Einstellungen. Deine eigenen sieben sind farbig, alle anderen
 (Google Play, maxdome, Videoload …) grau. Die Auswahl in den Einstellungen

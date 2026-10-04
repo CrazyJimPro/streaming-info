@@ -48,6 +48,17 @@
         <div class="such-inhalt">
           <h2>{{ t.titel }}</h2>
           <div class="datum">{{ t.art }}{% if t.jahr %} &middot; {{ t.jahr }}{% endif %}</div>
+          {% if t.gemerkt %}
+            <div class="gemerkt-hinweis">⭐ Auf der Merkliste</div>
+          {% else %}
+            <form class="merken-formular" method="post" action="{{ url_for('merken') }}">
+              <input type="hidden" name="tmdb_id" value="{{ t.tmdb_id }}">
+              <input type="hidden" name="medientyp" value="{{ t.medientyp }}">
+              <input type="hidden" name="titel" value="{{ t.titel }}">
+              <input type="hidden" name="q" value="{{ suchtext }}">
+              <button type="submit">⭐ Merken</button>
+            </form>
+          {% endif %}
 
           {% if t.bezug is none %}
             <p class="leer-hinweis">Die Anbieter ließen sich gerade nicht abrufen &mdash; bitte die Suche wiederholen.</p>

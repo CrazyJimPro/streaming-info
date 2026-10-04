@@ -547,6 +547,7 @@ def suche():
         # Eigene Anbieter bekommen ihre Farbe aus der Uebersicht, alle anderen
         # (Maxdome, Videoload, Google Play ...) bleiben grau.
         farben = {a["tmdb_name"]: a["farbe"] for a in lade_anbieter() if a.get("tmdb_name")}
+        gemerkt = {(m["tmdb_id"], m["medientyp"]) for m in lade_einstellungen().get("merkliste", [])}
         for eintrag in roh:
             titel = eintrag["titel"]
             bezug = eintrag["bezug"]
@@ -560,11 +561,37 @@ def suche():
                     "titel": titel.titel,
                     "jahr": (titel.erscheinungsdatum or "")[:4],
                     "art": "Film" if titel.medientyp == "film" else "Serie",
+                    "tmdb_id": titel.tmdb_id,
+                    "medientyp": titel.medientyp,
+                    "gemerkt": (titel.tmdb_id, titel.medientyp) in gemerkt,
                     "poster_url": _poster_url(titel.poster_pfad),
                     "bezug": bezug,
                 }
             )
     return render_template("suche.html", suchtext=suchtext, treffer=treffer, fehler=fehler)
+
+
+@app.route("/merken", methods=["POST"])
+def merken():
+    """Setzt einen Suchtreffer auf die Merkliste (Knopf in der Suche) - das
+    Gegenstueck zur Live-Suche in den Einstellungen, ohne den Umweg dorthin."""
+    try:
+        tmdb_id = int(request.form["tmdb_id"])
+    except (KeyError, ValueError):
+        return redirect(url_for("index"))
+    medientyp = request.form.get("medientyp")
+    suchtext = request.form.get("q", "")
+    if medientyp not in ("film", "serie"):
+        return redirect(url_for("suche", q=suchtext))
+    daten = lade_einstellungen()
+    merkliste = daten.setdefault("merkliste", [])
+    if not any(e["tmdb_id"] == tmdb_id and e["medientyp"] == medientyp for e in merkliste):
+        merkliste.append({"tmdb_id": tmdb_id, "medientyp": medientyp, "titel": request.form.get("titel", "")})
+        speichere_einstellungen(daten)
+        # Der Termin des neuen Titels wird erst beim Scan abgefragt; ohne ihn
+        # stuende er auf der Startseite zunaechst als "Noch kein Termin bekannt".
+        _scan_im_hintergrund_starten()
+    return redirect(url_for("suche", q=suchtext))
 
 
 @app.route("/ausblenden", methods=["POST"])
