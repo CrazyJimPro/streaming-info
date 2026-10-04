@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suche &ndash; Streaming-Info</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("si-theme");
+        if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Wo läuft das?</h1>
+      <p class="subtitle">Film oder Serie suchen &mdash; angezeigt wird, bei welchem Anbieter in Deutschland abrufbar.</p>
+    </div>
+    <div class="kopf-aktionen">
+      <button id="theme-toggle" type="button"></button>
+      <a class="knopf" href="{{ url_for('index') }}">Zur Übersicht</a>
+    </div>
+  </header>
+
+  <form class="such-formular" method="get" action="{{ url_for('suche') }}">
+    <input type="search" name="q" value="{{ suchtext }}" placeholder="Titel eingeben, z. B. Severance" autofocus required>
+    <button class="primaer" type="submit">Suchen</button>
+  </form>
+
+  {% if fehler %}
+  <div class="scan-hinweis fehler">{{ fehler }}</div>
+  {% endif %}
+
+  {% if suchtext and not fehler %}
+    {% if treffer %}
+    <div class="such-liste">
+      {% for t in treffer %}
+      <article class="such-treffer">
+        {% if t.poster_url %}
+          <img class="such-poster" src="{{ t.poster_url }}" alt="" loading="lazy">
+        {% else %}
+          <div class="such-poster poster-platzhalter">{{ t.titel }}</div>
+        {% endif %}
+        <div class="such-inhalt">
+          <h2>{{ t.titel }}</h2>
+          <div class="datum">{{ t.art }}{% if t.jahr %} &middot; {{ t.jahr }}{% endif %}</div>
+
+          {% if t.bezug is none %}
+            <p class="leer-hinweis">Die Anbieter ließen sich gerade nicht abrufen &mdash; bitte die Suche wiederholen.</p>
+          {% elif t.bezug %}
+            {% for gruppe in t.bezug %}
+            <div class="bezug-zeile">
+              <span class="bezug-art">{{ gruppe.beschriftung }}</span>
+              <span class="badges">
+                {% for a in gruppe.anbieter %}
+                <span class="badge" style="background:{{ a.farbe }}">{{ a.name }}</span>
+                {% endfor %}
+              </span>
+            </div>
+            {% endfor %}
+          {% else %}
+            <p class="leer-hinweis">Derzeit bei keinem Anbieter in Deutschland geführt.</p>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    <p class="abschnitt-hinweis">
+      Die Verfügbarkeit stammt von JustWatch über TMDB und kann ein paar Tage hinterherhinken.
+      „Derzeit bei keinem Anbieter" heißt: TMDB kennt für Deutschland keinen &mdash; der Titel kann
+      trotzdem bald starten (dann hilft die Merkliste in den Einstellungen).
+    </p>
+    {% else %}
+    <p class="leer-hinweis">Zu „{{ suchtext }}" wurde nichts gefunden.</p>
+    {% endif %}
+  {% endif %}
+
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

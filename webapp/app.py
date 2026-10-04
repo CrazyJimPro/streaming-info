@@ -50,7 +50,7 @@ from scraper.storage import (  # noqa: E402
     hole_starts_im_zeitraum,
     init_db,
 )
-from scraper.tmdb import suche_titel  # noqa: E402
+from scraper.tmdb import suche_titel, suche_verfuegbarkeit  # noqa: E402
 
 app = Flask(__name__)
 
@@ -525,6 +525,46 @@ def titel_suche():
             for t in treffer[:10]
         ]
     )
+
+
+@app.route("/suche")
+def suche():
+    """Titelsuche mit Verfuegbarkeit: bei welchem Anbieter laeuft ein Film oder
+    eine Serie in Deutschland. Anders als die Uebersicht ist das unabhaengig von
+    der Anbieterauswahl in den Einstellungen - gesucht wird bei allen."""
+    suchtext = request.args.get("q", "").strip()
+    api_key = lade_api_schluessel()
+    treffer: list[dict] = []
+    fehler = None
+    if suchtext and not api_key:
+        fehler = "Ohne TMDB-Schlüssel ist keine Suche möglich. Er wird in den Einstellungen eingetragen."
+    elif suchtext:
+        try:
+            roh = suche_verfuegbarkeit(neue_session(), api_key, suchtext)
+        except TmdbFehler as exc:
+            roh = []
+            fehler = f"Die Suche bei TMDB ist fehlgeschlagen: {exc}"
+        # Eigene Anbieter bekommen ihre Farbe aus der Uebersicht, alle anderen
+        # (Maxdome, Videoload, Google Play ...) bleiben grau.
+        farben = {a["tmdb_name"]: a["farbe"] for a in lade_anbieter() if a.get("tmdb_name")}
+        for eintrag in roh:
+            titel = eintrag["titel"]
+            bezug = eintrag["bezug"]
+            if bezug is not None:
+                for gruppe in bezug:
+                    gruppe["anbieter"] = [
+                        {"name": name, "farbe": farben.get(name, "#6b7280")} for name in gruppe["anbieter"]
+                    ]
+            treffer.append(
+                {
+                    "titel": titel.titel,
+                    "jahr": (titel.erscheinungsdatum or "")[:4],
+                    "art": "Film" if titel.medientyp == "film" else "Serie",
+                    "poster_url": _poster_url(titel.poster_pfad),
+                    "bezug": bezug,
+                }
+            )
+    return render_template("suche.html", suchtext=suchtext, treffer=treffer, fehler=fehler)
 
 
 @app.route("/ausblenden", methods=["POST"])

@@ -36,6 +36,11 @@
     </div>
   </header>
 
+  <form class="such-formular" method="get" action="{{ url_for('suche') }}">
+    <input type="search" name="q" placeholder="Film oder Serie suchen – wo läuft sie?" required>
+    <button class="primaer" type="submit">Suchen</button>
+  </form>
+
   {% if einrichtung_offen %}
   <div class="setup-hinweis">
     <strong>Schon eine Sicherung von einer früheren Installation?</strong>

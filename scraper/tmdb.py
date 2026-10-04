@@ -19,6 +19,7 @@ geprueft, bevor hier etwas gebaut wurde:
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
 import requests
@@ -104,6 +105,52 @@ def suche_titel(session: requests.Session, api_key: str, suchtext: str) -> list[
         elif rohdaten.get("media_type") == "tv":
             ergebnisse.append(_zu_titel_eintrag(rohdaten, "serie"))
     return ergebnisse
+
+
+# Reihenfolge und Beschriftung der Bezugsarten, wie TMDB sie unter
+# watch/providers fuehrt (die Daten stammen von JustWatch).
+BEZUGSARTEN = (
+    ("flatrate", "Im Abo"),
+    ("free", "Kostenlos"),
+    ("ads", "Gratis mit Werbung"),
+    ("rent", "Leihen"),
+    ("buy", "Kaufen"),
+)
+MAX_SUCHTREFFER = 8
+
+
+def suche_verfuegbarkeit(session: requests.Session, api_key: str, suchtext: str) -> list[dict]:
+    """Sucht einen Film oder eine Serie und liefert je Treffer, wo er in
+    Deutschland abrufbar ist - bei JEDEM Anbieter, den TMDB kennt, nicht nur bei
+    den sieben aus den Einstellungen.
+
+    Das ist die Gegenrichtung zum Rest des Tools: dort ist der Anbieter der
+    Ausgangspunkt ("was kommt bei Netflix"), hier der Titel ("wo laeuft X").
+    TMDB liefert dafuer pro Titel einen eigenen Abruf, deshalb parallel.
+    Fehlschlagende Einzelabrufe machen den Treffer nicht unsichtbar, sondern
+    erscheinen als "unbekannt" - sonst wuerde ein Netzwerkhaenger wie
+    "nirgends verfuegbar" aussehen.
+    """
+    treffer = suche_titel(session, api_key, suchtext)[:MAX_SUCHTREFFER]
+
+    def _anbieter_holen(titel: TitelEintrag) -> dict:
+        pfad = f"/{'movie' if titel.medientyp == 'film' else 'tv'}/{titel.tmdb_id}/watch/providers"
+        try:
+            de = get_json(session, pfad, api_key).get("results", {}).get("DE", {})
+        except TmdbFehler as exc:
+            logger.warning("Anbieterabfrage fuer %s fehlgeschlagen: %s", titel.titel, exc)
+            return {"titel": titel, "bezug": None}
+        bezug = []
+        for schluessel, beschriftung in BEZUGSARTEN:
+            namen = sorted({a["provider_name"] for a in de.get(schluessel, [])})
+            if namen:
+                bezug.append({"art": schluessel, "beschriftung": beschriftung, "anbieter": namen})
+        return {"titel": titel, "bezug": bezug}
+
+    if not treffer:
+        return []
+    with ThreadPoolExecutor(max_workers=len(treffer)) as pool:
+        return list(pool.map(_anbieter_holen, treffer))
 
 
 def _blaettere(session, api_key: str, pfad: str, max_seiten: int, **params):

@@ -8,6 +8,8 @@ Ein privates, lokales Tool. Es zeigt in einer kleinen Web-App im Browser,
   Disney+, Apple TV+, Paramount+, WOW (Sky) und HBO Max, farbig nach Anbieter
 - **Kino** — deutsche Kinostarttermine
 - **Digital** — Filme mit angekündigtem Termin für die digitale Auswertung
+- **Suche** — „Wo läuft das?“: Titel eingeben, die App zeigt, bei welchem Anbieter
+  er in Deutschland abrufbar ist
 
 Was **bereits läuft**, steht bewusst nicht drin. Die Übersicht beantwortet
 „worauf kann ich mich freuen", nicht „was liegt gerade im Katalog".
@@ -22,6 +24,7 @@ keine geplante Aufgabe, kein Cronjob.
 |---|---|
 | das Tool zum ersten Mal einrichten | [Einrichtung in 3 Schritten](#einrichtung-in-3-schritten) |
 | es täglich benutzen | [Starten und beenden](#starten-und-beenden) |
+| wissen, wo ein Film oder eine Serie läuft | [Suche](#suche-wo-läuft-das) |
 | bestimmte Serien im Blick behalten | [Merkliste](#merkliste-bestimmte-titel-im-blick-behalten) |
 | meine Liste sichern | [Sicherung erstellen](#sicherung-erstellen) |
 | meine Liste auf einen anderen Rechner holen | [Sicherung einspielen](#sicherung-einspielen) |
@@ -138,6 +141,29 @@ läuft nichts mehr im Hintergrund. Nur das Browserfenster zu schließen genügt
 
 **Welche Version läuft?** Oben in der Kopfzeile steht ein kleines Abzeichen,
 z.B. `v0.4.1`.
+
+---
+
+# Suche: Wo läuft das?
+
+Du suchst einen Film oder eine Serie und weißt nicht, wo sie läuft — oder ob
+überhaupt?
+
+1. Oben auf der Startseite in das Suchfeld den Titel eintippen.
+2. **Suchen** klicken (oder Enter).
+3. Zu jedem Treffer steht, wo er in Deutschland abrufbar ist, getrennt nach
+   **Im Abo**, **Kostenlos**, **Gratis mit Werbung**, **Leihen** und **Kaufen**.
+
+Gesucht wird bei **allen** Anbietern, die TMDB kennt — nicht nur bei den
+sieben aus den Einstellungen. Deine eigenen sieben sind farbig, alle anderen
+(Google Play, maxdome, Videoload …) grau. Die Auswahl in den Einstellungen
+spielt hier keine Rolle.
+
+**„Derzeit bei keinem Anbieter in Deutschland geführt"** heißt: TMDB kennt
+dafür aktuell keinen Anbieter. Der Titel kann trotzdem bald starten — dann ist
+die [Merkliste](#merkliste-bestimmte-titel-im-blick-behalten) der richtige Ort.
+Die Verfügbarkeit kommt von JustWatch über TMDB und kann ein paar Tage
+hinterherhinken.
 
 ---
 
