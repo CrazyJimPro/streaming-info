@@ -343,6 +343,12 @@ section.abschnitt h2 {
   padding: 0.25rem 0.6rem;
 }
 
+.merken-formular {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .gemerkt-hinweis {
   font-size: 0.78rem;
   font-weight: 600;

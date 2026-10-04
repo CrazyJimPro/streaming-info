@@ -594,6 +594,29 @@ def merken():
     return redirect(url_for("suche", q=suchtext))
 
 
+@app.route("/entmerken", methods=["POST"])
+def entmerken():
+    """Nimmt einen Titel von der Merkliste - in der Suche und direkt an der
+    Karte in der Merkliste. Mit 'q' geht es zurueck zur Suche, sonst zur
+    Startseite. Der zugehoerige Termin in der Datenbank bleibt liegen und wird
+    nicht mehr angezeigt, denn die Merkliste richtet sich nach den
+    Einstellungen."""
+    try:
+        tmdb_id = int(request.form["tmdb_id"])
+    except (KeyError, ValueError):
+        return redirect(url_for("index"))
+    medientyp = request.form.get("medientyp")
+    daten = lade_einstellungen()
+    behalten = [
+        e for e in daten.get("merkliste", []) if not (e["tmdb_id"] == tmdb_id and e["medientyp"] == medientyp)
+    ]
+    if len(behalten) != len(daten.get("merkliste", [])):
+        daten["merkliste"] = behalten
+        speichere_einstellungen(daten)
+    suchtext = request.form.get("q")
+    return redirect(url_for("suche", q=suchtext) if suchtext else url_for("index"))
+
+
 @app.route("/ausblenden", methods=["POST"])
 def ausblenden():
     """Blendet einen einzelnen Titel direkt aus der Uebersicht aus (Knopf an
