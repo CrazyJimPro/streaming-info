@@ -244,6 +244,7 @@ def _starts_aufbereiten(zeilen: list[dict], anbieter_karte: dict[str, dict], heu
         info = anbieter_karte.get(zeile["anbieter"])
         eintrag["anbieter_liste"].append(
             {
+                "schluessel": zeile["anbieter"],
                 "name": info["name"] if info else zeile["anbieter"],
                 "farbe": info["farbe"] if info else "#888",
             }
@@ -264,6 +265,31 @@ def _starts_aufbereiten(zeilen: list[dict], anbieter_karte: dict[str, dict], heu
             eintrag["zusatz"] = ""
     ergebnis.sort(key=lambda e: e["startdatum"])
     return ergebnis
+
+
+DIGITAL_FARBE = "#6b7280"
+
+
+def _schnellfilter_quellen(
+    aktive: list[str], anbieter_karte: dict[str, dict], abschnitte: list[list[dict]]
+) -> list[dict]:
+    """Knoepfe fuer den Schnellfilter auf der Startseite: die in den
+    Einstellungen aktiven Anbieter in der Reihenfolge von anbieter.json, dann
+    Kino und Digital - je mit der Zahl der Karten, die sie gerade tragen."""
+    anzahl: dict[str, int] = defaultdict(int)
+    for eintraege in abschnitte:
+        for eintrag in eintraege:
+            for schluessel in {a["schluessel"] for a in eintrag["anbieter_liste"]}:
+                anzahl[schluessel] += 1
+    quellen = [
+        {"schluessel": s, "name": a["name"], "farbe": a["farbe"], "anzahl": anzahl[s]}
+        for s, a in anbieter_karte.items()
+        if s != "kino" and s in aktive
+    ]
+    kino = anbieter_karte.get("kino", {})
+    quellen.append({"schluessel": "kino", "name": "Kino", "farbe": kino.get("farbe", "#e63946"), "anzahl": anzahl["kino"]})
+    quellen.append({"schluessel": "digital", "name": "Digital", "farbe": DIGITAL_FARBE, "anzahl": anzahl["digital"]})
+    return quellen
 
 
 def _merkliste_aufbereiten(zeilen: list[dict], heute: date) -> list[dict]:
@@ -341,6 +367,9 @@ def index():
         digital=digital,
         kino=kino,
         merkliste=merkliste,
+        schnellfilter_quellen=_schnellfilter_quellen(
+            einstellungen.get("aktive_anbieter", []), anbieter_karte, [streaming, kino, digital]
+        ),
         gemerkt_ids={(m["tmdb_id"], m["medientyp"]) for m in einstellungen.get("merkliste", [])},
         status=status,
         heute=heute,

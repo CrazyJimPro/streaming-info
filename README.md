@@ -24,6 +24,7 @@ keine geplante Aufgabe, kein Cronjob.
 |---|---|
 | das Tool zum ersten Mal einrichten | [Einrichtung in 3 Schritten](#einrichtung-in-3-schritten) |
 | es täglich benutzen | [Starten und beenden](#starten-und-beenden) |
+| auf der Startseite nur Netflix, nur Filme o. Ä. sehen | [Schnellfilter](#schnellfilter-nur-bestimmte-anbieter-oder-nur-filme) |
 | wissen, wo ein Film oder eine Serie läuft | [Suche](#suche-wo-läuft-das) |
 | bestimmte Serien im Blick behalten | [Merkliste](#merkliste-bestimmte-titel-im-blick-behalten) |
 | meine Liste sichern | [Sicherung erstellen](#sicherung-erstellen) |
@@ -142,6 +143,35 @@ läuft nichts mehr im Hintergrund. Nur das Browserfenster zu schließen genügt
 
 **Welche Version läuft?** Oben in der Kopfzeile steht ein kleines Abzeichen,
 z.B. `v0.4.1`.
+
+---
+
+# Schnellfilter: nur bestimmte Anbieter oder nur Filme
+
+Unter dem Suchfeld auf der Startseite steht eine Leiste mit Knöpfen. Damit
+grenzt du die Übersicht mit einem Klick ein, ohne die Einstellungen
+anzufassen.
+
+### So geht's
+
+1. **Serien oder Filme:** auf **„Serien"** klicken, dann bleibt nur der
+   Streaming-Abschnitt. Bei **„Filme"** bleiben Kino und Digital.
+   **„Alle"** zeigt wieder alles.
+2. **Anbieter:** auf einen oder mehrere farbige Knöpfe klicken, z. B.
+   **Netflix** und **Kino**. Es bleiben nur Titel dieser Anbieter. Nochmal
+   klicken nimmt den Anbieter wieder heraus.
+3. **Zurück zu allem:** auf **„Filter zurücksetzen"**.
+
+Gut zu wissen:
+
+- Die Zahl im Knopf zeigt, wie viele Titel der Anbieter gerade hat. Ein
+  ausgegrauter Knopf hat im Moment keine.
+- Die **Merkliste** reagiert nur auf Serien/Filme, nicht auf die
+  Anbieter-Knöpfe.
+- Der Schnellfilter ist nur eine Ansicht: Er holt nichts neu und ändert keine
+  Einstellungen. Beim nächsten Öffnen der App ist wieder alles zu sehen.
+- Welche Anbieter **überhaupt** abgefragt werden, legst du weiterhin unter
+  *Einstellungen → Streaming-Anbieter* fest. Nur diese erscheinen als Knopf.
 
 ---
 

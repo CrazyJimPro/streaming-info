@@ -269,6 +269,62 @@ section.abschnitt h2 {
   font-style: italic;
 }
 
+/* Schnellfilter auf der Startseite */
+
+/* .karte (flex) und button (inline-block) setzen display selbst - ohne diese
+   Regel wuerde das hidden-Attribut des Schnellfilters ueberstimmt. */
+.karte[hidden], section.abschnitt[hidden], .filter-zuruecksetzen[hidden] { display: none; }
+
+.schnellfilter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: -0.5rem 0 1.25rem;
+}
+
+.schnellfilter-art,
+.schnellfilter-quellen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.filter-chip {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.filter-chip[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.quelle-chip[aria-pressed="true"] {
+  background: var(--chip-farbe);
+  border-color: var(--chip-farbe);
+}
+
+.quelle-chip[aria-pressed="true"] .farb-punkt { background: #fff !important; }
+
+.filter-chip:disabled { opacity: 0.4; cursor: default; }
+
+.chip-anzahl { opacity: 0.75; }
+
+.filter-zuruecksetzen {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  border: none;
+  background: none;
+  color: var(--link);
+  text-decoration: underline;
+}
+
 /* Suche: Wo laeuft ein Titel? */
 
 .such-formular {

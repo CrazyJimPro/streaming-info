@@ -41,6 +41,26 @@
     <button class="primaer" type="submit">Suchen</button>
   </form>
 
+  {# Schnellfilter: reine Ansicht im Browser, kein neuer Abruf und keine
+     Aenderung an den Einstellungen. Beim naechsten Oeffnen ist wieder alles da. #}
+  <div class="schnellfilter" id="schnellfilter">
+    <div class="schnellfilter-art" role="group" aria-label="Art">
+      <button type="button" class="filter-chip" data-art="alle" aria-pressed="true">Alle</button>
+      <button type="button" class="filter-chip" data-art="serie" aria-pressed="false">Serien</button>
+      <button type="button" class="filter-chip" data-art="film" aria-pressed="false">Filme</button>
+    </div>
+    <div class="schnellfilter-quellen" role="group" aria-label="Anbieter">
+      {% for q in schnellfilter_quellen %}
+      <button type="button" class="filter-chip quelle-chip" data-quelle="{{ q.schluessel }}" aria-pressed="false"
+              style="--chip-farbe: {{ q.farbe }}" {{ "disabled" if not q.anzahl else "" }}>
+        <span class="farb-punkt" style="background:{{ q.farbe }}"></span>{{ q.name }} <span class="chip-anzahl">({{ q.anzahl }})</span>
+      </button>
+      {% endfor %}
+    </div>
+    <button type="button" class="filter-zuruecksetzen" id="filter-zuruecksetzen" hidden>Filter zurücksetzen</button>
+  </div>
+  <p class="leer-hinweis" id="filter-leer" hidden>Keine Treffer für diesen Filter. <a href="#" id="filter-leer-zuruecksetzen">Filter zurücksetzen</a></p>
+
   {% if einrichtung_offen %}
   <div class="setup-hinweis">
     <strong>Schon eine Sicherung von einer früheren Installation?</strong>
@@ -80,7 +100,8 @@
   {% endif %}
 
   {% macro kachel(eintrag, feste_farbe=None, festes_label=None, gemerkt=False) %}
-  <article class="karte">
+  <article class="karte" data-medientyp="{{ eintrag.medientyp }}"
+           data-quellen="{{ eintrag.anbieter_liste | map(attribute='schluessel') | join(' ') }}">
     {% if eintrag.poster_url %}
       <img class="poster" src="{{ eintrag.poster_url }}" alt="" loading="lazy">
     {% else %}
@@ -133,7 +154,7 @@
   {% endmacro %}
 
   {% if merkliste %}
-  <section class="abschnitt">
+  <section class="abschnitt" data-abschnitt="merkliste">
     <h2>⭐ Deine Merkliste</h2>
     <p class="abschnitt-hinweis">
       Gemerkte Titel werden einzeln bei TMDB nachgefragt &mdash; unabhängig vom
@@ -148,7 +169,7 @@
   </section>
   {% endif %}
 
-  <section class="abschnitt">
+  <section class="abschnitt" data-abschnitt="streaming">
     <h2>📺 Startet demnächst im Streaming</h2>
     {% if streaming %}
     <div class="karten-grid">
@@ -159,7 +180,7 @@
     {% endif %}
   </section>
 
-  <section class="abschnitt">
+  <section class="abschnitt" data-abschnitt="kino">
     <h2>🎬 Kinostarts</h2>
     {% if kino %}
     <div class="karten-grid">
@@ -170,7 +191,7 @@
     {% endif %}
   </section>
 
-  <section class="abschnitt">
+  <section class="abschnitt" data-abschnitt="digital">
     <h2>💿 Filme mit digitalem Start</h2>
     <p class="abschnitt-hinweis">
       Filme, für die ein Termin für die digitale Auswertung (Streaming/Kauf) angekündigt ist.
@@ -187,6 +208,7 @@
   </section>
 
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='schnellfilter.js') }}"></script>
   <script>
     (function () {
       var laeuft = {{ 'true' if scan.laeuft else 'false' }};
