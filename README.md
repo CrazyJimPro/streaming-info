@@ -29,6 +29,7 @@ keine geplante Aufgabe, kein Cronjob.
 | meine Liste sichern | [Sicherung erstellen](#sicherung-erstellen) |
 | meine Liste auf einen anderen Rechner holen | [Sicherung einspielen](#sicherung-einspielen) |
 | dass weniger Unbekanntes angezeigt wird | [Weitere Einstellungen](#weitere-einstellungen) |
+| nur deutsche und englische Titel sehen | [Sprachfilter](#fremdsprachige-titel-ausblenden-sprachfilter) |
 | ein Problem lösen | [Wenn etwas nicht klappt](#wenn-etwas-nicht-klappt) |
 
 ---
@@ -199,8 +200,8 @@ Klick auf die Merkliste.
 
 ### Was du erwarten kannst
 
-Ein gemerkter Titel wird **immer** angezeigt — auch wenn sein Genre
-abgewählt ist, sein Anbieter nicht ausgewählt wurde oder der Start weit hinter
+Ein gemerkter Titel wird **immer** angezeigt — auch wenn sein Genre oder
+seine Sprache abgewählt ist, sein Anbieter nicht ausgewählt wurde oder der Start weit hinter
 deinem Vorschau-Zeitraum liegt. Startet eine gemerkte Serie erst in einem
 halben Jahr, steht sie trotzdem da.
 
@@ -226,7 +227,7 @@ ganzen Tool, was sich nicht von selbst wiederbeschafft. Dafür gibt es die
 Sicherung.
 
 **In der Sicherung steckt:** Merkliste, ausgeblendete Titel, Vorschau-Zeitraum,
-Anbieter- und Genre-Auswahl sowie dein TMDB-Schlüssel.
+Anbieter-, Genre- und Sprachauswahl sowie dein TMDB-Schlüssel.
 **Nicht drin:** die Termine selbst — die holt der nächste Abruf in Sekunden neu.
 
 ### So geht's
@@ -306,8 +307,34 @@ klicken. Jede Speicherung holt die Daten sofort neu.
   werden. Wer kein Paramount+ hat, nimmt das Häkchen einfach raus.
 - **Genres** — Einschränkung auf bestimmte Genres. **Kein Häkchen = alle
   Genres.**
+- **Originalsprachen** — nur Titel zeigen, die in bestimmten Sprachen gedreht
+  sind. **Kein Häkchen = alle Sprachen.** Siehe nächster Abschnitt.
 - **TMDB-API-Schlüssel** — zum Ändern einen neuen eintragen. Lässt du das Feld
   leer, bleibt der bisherige erhalten.
+
+### Fremdsprachige Titel ausblenden (Sprachfilter)
+
+TMDB führt unter „Deutschland" auch viele Starts ohne deutschen Bezug —
+etwa tamilische, koreanische oder philippinische Titel. Statt sie einzeln
+auszublenden, kannst du die Übersicht auf bestimmte Sprachen beschränken:
+
+1. Oben rechts auf **„Einstellungen"**.
+2. Zum Block **„Originalsprachen"** scrollen.
+3. Die Sprachen anhaken, die du sehen willst — meist **Deutsch** und
+   **Englisch**. Die Zahl in Klammern zeigt, wie viele bevorstehende Titel
+   gerade in dieser Sprache gedreht sind.
+4. Unten auf **„Speichern"**. Die Übersicht zeigt danach nur noch Titel in den
+   gewählten Sprachen.
+
+Gut zu wissen:
+
+- Es zählt die **Originalsprache**, nicht die Synchronisation. Eine
+  koreanische Netflix-Serie mit deutscher Tonspur ist „Koreanisch".
+- **Gemerkte Titel** erscheinen immer, egal in welcher Sprache.
+- Zum Zurücknehmen alle Häkchen entfernen und speichern.
+- Direkt nach dem Update auf v0.8.0 kennt das Tool die Sprachen erst nach dem
+  ersten Abruf. Der läuft beim Start ohnehin, bis dahin wird nichts
+  weggefiltert.
 
 ### Warum nicht *alles* angezeigt wird
 
@@ -373,6 +400,7 @@ erscheinen, falls noch ein Paket nachinstalliert werden muss. Wird ein
 - Ist der **TMDB-Schlüssel** eingetragen? Fehlt er, steht oben ein Hinweis.
 - Ist der **Vorschau-Zeitraum** sehr kurz? Probiere 8 oder 10 Wochen.
 - Sind alle **Genres** abgewählt bis auf wenige? Kein Häkchen = alle.
+- Sind nur wenige **Originalsprachen** angehakt? Kein Häkchen = alle.
 - Steht bei den Anbietern oben ein **Fehler**-Abzeichen? Dann kam der Abruf
   nicht durch — meist ein Netzwerkproblem, einmal „Jetzt aktualisieren"
   drücken.
@@ -395,7 +423,7 @@ Alles unterhalb von `%USERPROFILE%\streaming-info` bzw. `~/streaming-info`:
 | Pfad | Inhalt |
 |---|---|
 | `config/config.json` | der TMDB-API-Schlüssel (bleibt bei Updates erhalten) |
-| `config/einstellungen.json` | Zeitraum, Anbieter/Genre-Auswahl, Merkliste, ausgeblendete Titel (bleibt bei Updates erhalten) |
+| `config/einstellungen.json` | Zeitraum, Anbieter-/Genre-/Sprachauswahl, Merkliste, ausgeblendete Titel (bleibt bei Updates erhalten) |
 | `config/vor-wiederherstellung-*.json` | der Stand vor dem letzten Einspielen einer Sicherung (die letzten zehn) |
 | `data/streaming.db` | die geholten Titel und ihre angekündigten Starttermine |
 | `logs/start.log` | Meldungen des Startskripts |

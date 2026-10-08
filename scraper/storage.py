@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS titel (
     erscheinungsdatum TEXT,
     genre_ids TEXT NOT NULL DEFAULT '',
     kinostart_de TEXT,
+    originalsprache TEXT,
     aktualisiert_am TEXT NOT NULL,
     PRIMARY KEY (tmdb_id, medientyp)
 );
@@ -71,6 +72,13 @@ def _verbindung(db_pfad: Path = DB_PFAD) -> sqlite3.Connection:
 def init_db(db_pfad: Path = DB_PFAD) -> None:
     with closing(_verbindung(db_pfad)) as conn, conn:
         conn.executescript(SCHEMA)
+        # CREATE TABLE IF NOT EXISTS zieht in einer schon vorhandenen Tabelle
+        # keine neuen Spalten nach - Datenbanken von vor v0.8.0 bekommen die
+        # Originalsprache deshalb hier nachgereicht. Bis zum naechsten Scan
+        # bleibt sie leer; der Sprachfilter zeigt solche Titel dann an.
+        spalten = {row["name"] for row in conn.execute("PRAGMA table_info(titel)")}
+        if "originalsprache" not in spalten:
+            conn.execute("ALTER TABLE titel ADD COLUMN originalsprache TEXT")
 
 
 def speichere_titel(eintraege: list[TitelEintrag], db_pfad: Path = DB_PFAD) -> None:
@@ -78,8 +86,8 @@ def speichere_titel(eintraege: list[TitelEintrag], db_pfad: Path = DB_PFAD) -> N
     with closing(_verbindung(db_pfad)) as conn, conn:
         conn.executemany(
             """
-            INSERT INTO titel (tmdb_id, medientyp, titel, overview, poster_pfad, erscheinungsdatum, genre_ids, kinostart_de, aktualisiert_am)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO titel (tmdb_id, medientyp, titel, overview, poster_pfad, erscheinungsdatum, genre_ids, kinostart_de, originalsprache, aktualisiert_am)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(tmdb_id, medientyp) DO UPDATE SET
                 titel = excluded.titel,
                 overview = excluded.overview,
@@ -87,6 +95,7 @@ def speichere_titel(eintraege: list[TitelEintrag], db_pfad: Path = DB_PFAD) -> N
                 erscheinungsdatum = excluded.erscheinungsdatum,
                 genre_ids = excluded.genre_ids,
                 kinostart_de = COALESCE(excluded.kinostart_de, kinostart_de),
+                originalsprache = COALESCE(excluded.originalsprache, originalsprache),
                 aktualisiert_am = excluded.aktualisiert_am
             """,
             [
@@ -99,6 +108,7 @@ def speichere_titel(eintraege: list[TitelEintrag], db_pfad: Path = DB_PFAD) -> N
                     e.erscheinungsdatum,
                     ",".join(str(g) for g in e.genre_ids),
                     e.kinostart_de,
+                    e.originalsprache,
                     jetzt,
                 )
                 for e in eintraege
@@ -229,6 +239,24 @@ def hole_quellen_status(db_pfad: Path = DB_PFAD) -> list[dict]:
     with closing(_verbindung(db_pfad)) as conn:
         rows = conn.execute("SELECT * FROM quellen_status ORDER BY quelle").fetchall()
         return [dict(row) for row in rows]
+
+
+def hole_vorkommende_sprachen(ab_datum: date, db_pfad: Path = DB_PFAD) -> dict[str, int]:
+    """Originalsprachen der noch bevorstehenden Starts samt Anzahl Titel - fuer
+    die Auswahl in den Einstellungen, damit auch seltene Sprachen anwaehlbar
+    sind, die in keiner festen Liste stehen."""
+    with closing(_verbindung(db_pfad)) as conn:
+        rows = conn.execute(
+            """
+            SELECT t.originalsprache AS sprache, COUNT(DISTINCT t.tmdb_id || t.medientyp) AS anzahl
+            FROM starts s
+            JOIN titel t ON t.tmdb_id = s.tmdb_id AND t.medientyp = s.medientyp
+            WHERE s.startdatum >= ? AND t.originalsprache IS NOT NULL
+            GROUP BY t.originalsprache
+            """,
+            (ab_datum.isoformat(),),
+        ).fetchall()
+        return {row["sprache"]: row["anzahl"] for row in rows}
 
 
 def hole_starts_im_zeitraum(

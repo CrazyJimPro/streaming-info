@@ -36,7 +36,7 @@ from scraper.einstellungen import (  # noqa: E402
     speichere_einstellungen,
 )
 from scraper.base import TmdbFehler, neue_session  # noqa: E402
-from scraper.filter import filtere_zeilen  # noqa: E402
+from scraper.filter import SPRACHNAMEN, filtere_zeilen  # noqa: E402
 from scraper.sicherung import (  # noqa: E402
     SicherungsFehler,
     erstelle_sicherung,
@@ -48,6 +48,7 @@ from scraper.storage import (  # noqa: E402
     hole_merkliste_eintraege,
     hole_quellen_status,
     hole_starts_im_zeitraum,
+    hole_vorkommende_sprachen,
     init_db,
 )
 from scraper.tmdb import suche_titel, suche_verfuegbarkeit  # noqa: E402
@@ -394,6 +395,19 @@ def _liste_aus_formular(praefix: str) -> list[dict]:
     ]
 
 
+def _sprachauswahl(gewaehlt: list[str]) -> list[dict]:
+    """Feste Sprachliste plus alles, was in den bevorstehenden Starts oder in
+    der eigenen Auswahl vorkommt - nach Anzeigename sortiert, Deutsch und
+    Englisch vorneweg, weil die fast jeder anhaken wird."""
+    anzahl = hole_vorkommende_sprachen(date.today(), db_pfad=DB_PFAD)
+    codes = set(SPRACHNAMEN) | set(anzahl) | set(gewaehlt)
+    auswahl = [
+        {"code": code, "name": SPRACHNAMEN.get(code, code), "anzahl": anzahl.get(code, 0)}
+        for code in codes
+    ]
+    return sorted(auswahl, key=lambda s: (s["code"] not in ("de", "en"), s["code"] != "de", s["name"].lower()))
+
+
 @app.route("/einstellungen", methods=["GET", "POST"])
 def einstellungen_seite():
     daten = lade_einstellungen()
@@ -407,6 +421,7 @@ def einstellungen_seite():
         daten["zeitraum_wochen"] = max(1, int(request.form.get("zeitraum_wochen", daten.get("zeitraum_wochen", 8))))
         daten["aktive_anbieter"] = request.form.getlist("aktive_anbieter")
         daten["aktive_genres"] = [int(g) for g in request.form.getlist("aktive_genres")]
+        daten["sprachen"] = request.form.getlist("sprachen")
 
         # Merkliste/Ausblendliste: Titel per tmdb_id+medientyp+titel aus dem
         # Formular uebernehmen (siehe webapp/static/einstellungen.js).
@@ -430,6 +445,7 @@ def einstellungen_seite():
         einstellungen=daten,
         anbieter=alle_anbieter,
         genres=sorted(genres.items(), key=lambda kv: kv[1]),
+        sprachen=_sprachauswahl(daten.get("sprachen", [])),
         api_schluessel_vorhanden=bool(lade_api_schluessel()),
         gespeichert=request.args.get("gespeichert") == "1",
         eingespielt=request.args.get("eingespielt"),

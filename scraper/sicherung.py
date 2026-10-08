@@ -2,7 +2,7 @@
 
 Gesichert wird genau das, was sich nicht von selbst wiederbeschafft: die
 Merkliste, die ausgeblendeten Titel, Zeitraum sowie Anbieter- und
-Genre-Auswahl (config/einstellungen.json) und der TMDB-Schluessel
+Genre-/Sprachauswahl (config/einstellungen.json) und der TMDB-Schluessel
 (config/config.json). **Nicht** gesichert wird data/streaming.db - das ist
 reiner Abruf-Zwischenspeicher, den der naechste Scan in wenigen Sekunden neu
 fuellt; sie in eine Sicherung zu packen wuerde die Datei nur aufblaehen und
@@ -177,6 +177,15 @@ def lies_sicherung(rohdaten: bytes | str, bekannte_anbieter: list[str] | None = 
     roh_genres = roh_einstellungen.get("aktive_genres")
     einstellungen["aktive_genres"] = (
         [int(g) for g in roh_genres if str(g).lstrip("-").isdigit()] if isinstance(roh_genres, list) else []
+    )
+
+    # Sprachen: kurze Buchstaben-Codes, wie TMDB sie fuehrt. Aeltere
+    # Sicherungen (vor v0.8.0) haben das Feld nicht - dann kein Filter.
+    roh_sprachen = roh_einstellungen.get("sprachen")
+    einstellungen["sprachen"] = (
+        sorted({str(c).strip().lower() for c in roh_sprachen if str(c).strip().isalpha() and len(str(c).strip()) <= 3})
+        if isinstance(roh_sprachen, list)
+        else []
     )
 
     # Wer eine Sicherung einspielt, hat sich eingerichtet: der Wegweiser fuer

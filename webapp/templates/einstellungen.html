@@ -18,7 +18,7 @@
   <header>
     <div>
       <h1>Einstellungen</h1>
-      <p class="subtitle">Anbieter, Genres, Merkliste und Zeitraum <span class="version">&middot; v{{ version }}</span></p>
+      <p class="subtitle">Anbieter, Genres, Sprachen, Merkliste und Zeitraum <span class="version">&middot; v{{ version }}</span></p>
     </div>
     <div class="kopf-aktionen">
       <button id="theme-toggle" type="button"></button>
@@ -93,8 +93,24 @@
     </div>
 
     <div class="einstellungen-block">
+      <h2>Originalsprachen</h2>
+      <p class="hinweis">Kein Häkchen gesetzt = alle Sprachen werden angezeigt. Die Zahl in Klammern
+        sagt, wie viele bevorstehende Titel gerade in dieser Sprache gedreht sind.
+        Gemerkte Titel erscheinen immer, egal in welcher Sprache.</p>
+      <div class="genre-grid">
+        {% for s in sprachen %}
+        <div class="checkbox-zeile">
+          <input type="checkbox" id="sprache-{{ s.code }}" name="sprachen" value="{{ s.code }}"
+                 {{ "checked" if s.code in einstellungen.get("sprachen", []) else "" }}>
+          <label for="sprache-{{ s.code }}">{{ s.name }}{% if s.anzahl %} <span class="hinweis">({{ s.anzahl }})</span>{% endif %}</label>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="einstellungen-block">
       <h2>Merkliste</h2>
-      <p class="hinweis">Titel hier werden immer angezeigt, auch wenn ihr Genre nicht ausgewählt ist.</p>
+      <p class="hinweis">Titel hier werden immer angezeigt, auch wenn ihr Genre oder ihre Sprache nicht ausgewählt ist.</p>
       <input type="text" id="merk-suche" placeholder="Film oder Serie suchen &hellip;" autocomplete="off">
       <div id="merk-ergebnisse" class="suchergebnisse"></div>
       <table class="merkliste-tabelle" id="merk-liste">
@@ -134,7 +150,7 @@
   <div class="einstellungen-block">
     <h2>Sicherung</h2>
     <p class="hinweis">
-      Gesichert werden Merkliste, ausgeblendete Titel, Zeitraum, Anbieter- und Genre-Auswahl
+      Gesichert werden Merkliste, ausgeblendete Titel, Zeitraum, Anbieter-, Genre- und Sprachauswahl
       sowie der TMDB-Schlüssel &ndash; also alles, was sich nicht von selbst wiederbeschafft.
       Die Termine selbst kommen beim nächsten Aktualisieren ohnehin neu und sind deshalb nicht dabei.
     </p>

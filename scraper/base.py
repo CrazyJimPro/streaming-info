@@ -22,6 +22,7 @@ class TitelEintrag:
     erscheinungsdatum: str | None
     genre_ids: list[int]
     kinostart_de: str | None = None
+    originalsprache: str | None = None  # ISO-639-1, z.B. "de", "en", "ko"
 
 
 @dataclass
