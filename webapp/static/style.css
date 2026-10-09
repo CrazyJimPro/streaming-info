@@ -423,6 +423,46 @@ section.abschnitt h2 {
   padding: 0.25rem 0.6rem;
   margin-top: 0.4rem;
   display: inline-block;
+  margin-right: 0.4rem;
+}
+
+.details-ansicht {
+  display: flex;
+  gap: 1.5rem;
+  max-width: 52rem;
+  align-items: flex-start;
+}
+
+.details-ansicht .such-poster {
+  flex: 0 0 180px;
+  width: 180px;
+}
+
+.details-inhalt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.details-zeile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.cast-liste {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cast-rolle {
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .gemerkt-hinweis {

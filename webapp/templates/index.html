@@ -149,6 +149,7 @@
         </form>
         {% endif %}
         <a class="knopf knopf-trailer" href="{{ eintrag.trailer_url }}" target="_blank" rel="noopener">▶ Trailer</a>
+        <a class="knopf knopf-trailer" href="{{ url_for('details', medientyp=eintrag.medientyp, tmdb_id=eintrag.tmdb_id) }}">ℹ Details</a>
       </div>
     </div>
   </article>

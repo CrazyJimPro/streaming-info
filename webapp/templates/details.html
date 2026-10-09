@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ daten.titel if daten else 'Details' }} &ndash; Streaming-Info</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("si-theme");
+        if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>{{ daten.titel if daten else 'Details' }}</h1>
+    </div>
+    <div class="kopf-aktionen">
+      <button id="theme-toggle" type="button"></button>
+      <a class="knopf" href="{{ zurueck }}">Zurück</a>
+    </div>
+  </header>
+
+  {% if fehler %}
+  <div class="scan-hinweis fehler">{{ fehler }}</div>
+  {% endif %}
+
+  {% if daten %}
+  <article class="details-ansicht">
+    {% if daten.poster_url %}
+      <img class="such-poster" src="{{ daten.poster_url }}" alt="">
+    {% else %}
+      <div class="such-poster poster-platzhalter">{{ daten.titel }}</div>
+    {% endif %}
+    <div class="details-inhalt">
+      <div class="details-zeile">
+        {% if daten.laufzeit %}<span class="badge" style="background:#6b7280">{{ daten.laufzeit }} Min.</span>{% endif %}
+        {% if daten.fsk %}<span class="badge" style="background:#6b7280">FSK {{ daten.fsk }}</span>{% endif %}
+        {% for genre in daten.genres %}<span class="badge" style="background:#6b7280">{{ genre }}</span>{% endfor %}
+      </div>
+
+      {% if daten.overview %}
+      <p>{{ daten.overview }}</p>
+      {% else %}
+      <p class="leer-hinweis">Keine Beschreibung bekannt.</p>
+      {% endif %}
+
+      {% if daten.cast %}
+      <h2>Darsteller</h2>
+      <ul class="cast-liste">
+        {% for person in daten.cast %}
+        <li>
+          <strong>{{ person.name }}</strong>
+          {% if person.rolle %}<span class="cast-rolle">als {{ person.rolle }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="leer-hinweis">Keine Darsteller bekannt.</p>
+      {% endif %}
+
+      {% if not daten.laufzeit and not daten.fsk %}
+      <p class="abschnitt-hinweis">Laufzeit oder FSK-Freigabe kennt TMDB für diesen Titel nicht.</p>
+      {% endif %}
+    </div>
+  </article>
+  {% endif %}
+
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

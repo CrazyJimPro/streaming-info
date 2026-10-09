@@ -66,6 +66,7 @@
             </form>
           {% endif %}
           <a class="knopf such-trailer" href="{{ t.trailer_url }}" target="_blank" rel="noopener">▶ Trailer</a>
+          <a class="knopf such-trailer" href="{{ url_for('details', medientyp=t.medientyp, tmdb_id=t.tmdb_id) }}">ℹ Details</a>
 
           {% if t.bezug is none %}
             <p class="leer-hinweis">Die Anbieter ließen sich gerade nicht abrufen &mdash; bitte die Suche wiederholen.</p>

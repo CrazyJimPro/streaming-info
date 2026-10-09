@@ -26,6 +26,7 @@ keine geplante Aufgabe, kein Cronjob.
 | es täglich benutzen | [Starten und beenden](#starten-und-beenden) |
 | auf der Startseite nur Netflix, nur Filme o. Ä. sehen | [Schnellfilter](#schnellfilter-nur-bestimmte-anbieter-oder-nur-filme) |
 | mir vorab einen Trailer ansehen | [Trailer ansehen](#trailer-ansehen) |
+| mehr zu einem Titel erfahren (Beschreibung, Darsteller, FSK) | [Detailansicht](#detailansicht) |
 | wissen, wo ein Film oder eine Serie läuft | [Suche](#suche-wo-läuft-das) |
 | bestimmte Serien im Blick behalten | [Merkliste](#merkliste-bestimmte-titel-im-blick-behalten) |
 | meine Liste sichern | [Sicherung erstellen](#sicherung-erstellen) |
@@ -191,6 +192,25 @@ das richtige ist.
 
 Findet sich dort kein Treffer, zeigt YouTube ganz normal „Keine Ergebnisse" —
 das ist dann eine Lücke bei KinoCheck selbst, kein Fehler der App.
+
+---
+
+# Detailansicht
+
+Auf jeder Karte steht neben „▶ Trailer" ein Knopf **„ℹ Details"**. Er öffnet
+eine eigene Seite mit allem, was TMDB zu dem Titel führt:
+
+- Laufzeit (Filme) bzw. Episodenlänge (Serien)
+- deutsche FSK-Freigabe
+- Genres
+- Beschreibung
+- die ersten acht Darsteller mit Rolle
+
+Die Angaben werden **bei jedem Klick frisch von TMDB geholt**, nicht beim
+Scan gespeichert — Darsteller und FSK ändern sich nicht, würden aber unnötig
+Platz in der Datenbank belegen. Fehlt eine Angabe (z.B. Laufzeit bei manchen
+Serien, FSK bei noch nicht freigegebenen Titeln), steht das offen so da,
+statt die Karte leer zu lassen.
 
 ---
 

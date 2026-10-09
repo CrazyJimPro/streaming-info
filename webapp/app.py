@@ -52,7 +52,7 @@ from scraper.storage import (  # noqa: E402
     hole_vorkommende_sprachen,
     init_db,
 )
-from scraper.tmdb import suche_titel, suche_verfuegbarkeit  # noqa: E402
+from scraper.tmdb import hole_details, suche_titel, suche_verfuegbarkeit  # noqa: E402
 
 app = Flask(__name__)
 
@@ -632,6 +632,25 @@ def suche():
                 }
             )
     return render_template("suche.html", suchtext=suchtext, treffer=treffer, fehler=fehler)
+
+
+@app.route("/details/<medientyp>/<int:tmdb_id>")
+def details(medientyp, tmdb_id):
+    """Detailansicht zu einem einzelnen Titel - wie die Suche live von TMDB
+    geholt, nichts davon landet in der Datenbank (siehe hole_details)."""
+    api_key = lade_api_schluessel()
+    daten = None
+    fehler = None
+    if not api_key:
+        fehler = "Ohne TMDB-Schlüssel sind keine Details möglich. Er wird in den Einstellungen eingetragen."
+    else:
+        try:
+            daten = hole_details(neue_session(), api_key, medientyp, tmdb_id)
+            daten["poster_url"] = _poster_url(daten.get("poster_pfad"))
+        except TmdbFehler as exc:
+            fehler = f"Die Details ließen sich gerade nicht abrufen: {exc}"
+    zurueck = request.referrer or url_for("index")
+    return render_template("details.html", daten=daten, fehler=fehler, zurueck=zurueck)
 
 
 @app.route("/merken", methods=["POST"])

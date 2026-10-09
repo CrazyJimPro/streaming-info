@@ -154,6 +154,53 @@ def suche_verfuegbarkeit(session: requests.Session, api_key: str, suchtext: str)
         return list(pool.map(_anbieter_holen, treffer))
 
 
+MAX_DARSTELLER = 8
+
+
+def hole_details(session: requests.Session, api_key: str, medientyp: str, tmdb_id: int) -> dict:
+    """Detailangaben fuer die Detailansicht - frisch von TMDB geholt, nichts
+    davon wird in der Datenbank gespeichert (anders als die Basisangaben aus
+    dem regulaeren Scan): Darsteller, FSK und Laufzeit werden sonst nirgends
+    gebraucht, ein staendiges Mitfuehren waere unnoetiger Aufwand."""
+    ist_film = medientyp == "film"
+    pfad = f"/{'movie' if ist_film else 'tv'}/{tmdb_id}"
+    anhang = "credits,release_dates" if ist_film else "credits,content_ratings"
+    daten = get_json(session, pfad, api_key, append_to_response=anhang)
+
+    cast = [
+        {"name": c["name"], "rolle": c.get("character", "")}
+        for c in daten.get("credits", {}).get("cast", [])[:MAX_DARSTELLER]
+    ]
+
+    fsk = None
+    if ist_film:
+        laufzeit = daten.get("runtime")
+        for eintrag in daten.get("release_dates", {}).get("results", []):
+            if eintrag.get("iso_3166_1") != "DE":
+                continue
+            for freigabe in eintrag.get("release_dates", []):
+                if freigabe.get("certification"):
+                    fsk = freigabe["certification"]
+                    break
+    else:
+        zeiten = daten.get("episode_run_time") or []
+        laufzeit = zeiten[0] if zeiten else None
+        for eintrag in daten.get("content_ratings", {}).get("results", []):
+            if eintrag.get("iso_3166_1") == "DE" and eintrag.get("rating"):
+                fsk = eintrag["rating"]
+                break
+
+    return {
+        "titel": daten.get("title") if ist_film else daten.get("name"),
+        "overview": daten.get("overview") or None,
+        "poster_pfad": daten.get("poster_path"),
+        "laufzeit": laufzeit,
+        "fsk": fsk,
+        "genres": [g["name"] for g in daten.get("genres", [])],
+        "cast": cast,
+    }
+
+
 def _blaettere(session, api_key: str, pfad: str, max_seiten: int, **params):
     """Laeuft die Seiten einer Discover-Abfrage ab und liefert die Rohtreffer."""
     seite = 1
