@@ -27,7 +27,7 @@ PROJEKT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJEKT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJEKT_ROOT))
 
-from flask import Flask, jsonify, redirect, render_template, request, url_for  # noqa: E402
+from flask import Flask, Response, jsonify, redirect, render_template, request, url_for  # noqa: E402
 
 from scraper.einstellungen import (  # noqa: E402
     lade_anbieter,
@@ -38,6 +38,7 @@ from scraper.einstellungen import (  # noqa: E402
 )
 from scraper.base import TmdbFehler, neue_session  # noqa: E402
 from scraper.filter import SPRACHNAMEN, filtere_zeilen  # noqa: E402
+from scraper.kalender import baue_ics  # noqa: E402
 from scraper.sicherung import (  # noqa: E402
     SicherungsFehler,
     erstelle_sicherung,
@@ -362,11 +363,10 @@ def _markiere_jetzt_verfuegbar(merkliste: list[dict], api_key: str, heute: date)
         eintrag["jetzt_verfuegbar"] = bezug
 
 
-@app.route("/")
-def index():
-    einstellungen = lade_einstellungen()
-    anbieter_karte = _anbieter_karte()
-    heute = date.today()
+def _abschnitte_laden(einstellungen: dict, anbieter_karte: dict, heute: date) -> tuple[list, list, list, date]:
+    """Streaming/Kino/Digital gefiltert wie auf der Startseite - gemeinsam
+    genutzt von index() und dem Kalender-Export, damit beide exakt denselben
+    Stand zeigen."""
     zeitraum_wochen = einstellungen.get("zeitraum_wochen", 8)
     bis = heute + timedelta(weeks=zeitraum_wochen)
 
@@ -386,6 +386,17 @@ def index():
 
     kino_rows = hole_starts_im_zeitraum(heute, bis, ("kino",), db_pfad=DB_PFAD)
     kino = _starts_aufbereiten(filtere_zeilen(kino_rows, einstellungen), anbieter_karte, heute)
+
+    return streaming, kino, digital, bis
+
+
+@app.route("/")
+def index():
+    einstellungen = lade_einstellungen()
+    anbieter_karte = _anbieter_karte()
+    heute = date.today()
+    streaming, kino, digital, bis = _abschnitte_laden(einstellungen, anbieter_karte, heute)
+    zeitraum_wochen = einstellungen.get("zeitraum_wochen", 8)
 
     # Merkliste bewusst ungefiltert und ohne Zeitraumgrenze: gemerkt ist
     # gemerkt. Auch Titel ohne bekannten Termin bleiben sichtbar, sonst wirkt
@@ -433,6 +444,24 @@ def index():
         api_schluessel_fehlt=api_schluessel_fehlt,
         einrichtung_offen=einrichtung_offen,
         kino_farbe=next((a["farbe"] for a in anbieter_karte.values() if a["schluessel"] == "kino"), "#e63946"),
+    )
+
+
+@app.route("/kalender.ics")
+def kalender():
+    """Kalenderdatei mit genau dem, was die Startseite gerade zeigt (Zeitraum,
+    Anbieter-/Genre-/Sprachfilter) - als Download oder, da die URL stabil
+    ist, als Kalender-Abo in Google/Apple/Outlook (aktualisiert sich dann bei
+    jedem Abruf, solange die App laeuft)."""
+    einstellungen = lade_einstellungen()
+    anbieter_karte = _anbieter_karte()
+    heute = date.today()
+    streaming, kino, digital, _ = _abschnitte_laden(einstellungen, anbieter_karte, heute)
+    inhalt = baue_ics(streaming, kino, digital)
+    return Response(
+        inhalt,
+        mimetype="text/calendar",
+        headers={"Content-Disposition": "attachment; filename=streaming-info.ics"},
     )
 
 

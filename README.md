@@ -29,6 +29,7 @@ keine geplante Aufgabe, kein Cronjob.
 | mehr zu einem Titel erfahren (Beschreibung, Darsteller, FSK) | [Detailansicht](#detailansicht) |
 | sehen, ob ein gemerkter Titel schon läuft | ["Jetzt verfügbar" in der Merkliste](#jetzt-verfügbar-in-der-merkliste) |
 | auf einen Blick sehen, was neu dazugekommen ist | ["Neu" seit dem letzten Besuch](#neu-seit-dem-letzten-besuch) |
+| die Starts in meinem eigenen Kalender sehen | [Kalender-Export (.ics)](#kalender-export-ics) |
 | wissen, wo ein Film oder eine Serie läuft | [Suche](#suche-wo-läuft-das) |
 | bestimmte Serien im Blick behalten | [Merkliste](#merkliste-bestimmte-titel-im-blick-behalten) |
 | meine Liste sichern | [Sicherung erstellen](#sicherung-erstellen) |
@@ -245,6 +246,27 @@ Karten in der Übersicht (Streaming, Kino, Digital), die seit deinem letzten
 - Beim allerersten Start nach der Installation (oder nach diesem Update) ist
   noch nichts als „neu" markiert — erst ab dem zweiten Besuch gibt es eine
   Vergleichsbasis.
+
+---
+
+# Kalender-Export (.ics)
+
+Oben auf der Startseite der Knopf **„📅 Kalender"** lädt eine `.ics`-Datei mit
+genau dem, was die Übersicht gerade zeigt: Streaming-, Kino- und
+Digital-Starts im eingestellten Zeitraum, nach Anbieter/Genre/Sprache
+gefiltert. Jeder Termin ist ein ganztägiger Eintrag mit Titel und Anbieter.
+
+Die Datei lässt sich in jeden Kalender importieren (Outlook, Google
+Kalender, Apple Kalender, Thunderbird, …). Da die Adresse immer gleich
+bleibt, geht auch ein **Kalender-Abo**: Google Kalender → „Weiteren Kalender
+hinzufügen → Per URL", Apple Kalender → „Ablage → Neues Kalenderabo", jeweils
+mit der Adresse `http://<Rechner>:5100/kalender.ics`. Der Kalender holt sich
+dann von selbst den aktuellen Stand — **aber nur, solange die App läuft**
+(kein Dienst im Hintergrund, siehe oben).
+
+Die Merkliste ist **nicht** enthalten — sie hat mit
+["Jetzt verfügbar"](#jetzt-verfügbar-in-der-merkliste) schon eine eigene
+Behandlung, und viele ihrer Einträge haben noch gar kein Datum.
 
 ---
 

@@ -26,6 +26,7 @@
     <div class="kopf-aktionen">
       <button id="theme-toggle" type="button"></button>
       <a class="knopf" href="{{ url_for('einstellungen_seite') }}">Einstellungen</a>
+      <a class="knopf" href="{{ url_for('kalender') }}" title="Kalender als .ics herunterladen oder als Abo eintragen">📅 Kalender</a>
       <form method="post" action="{{ url_for('aktualisieren') }}" style="display:inline">
         <button class="primaer" type="submit" {{ 'disabled' if scan.laeuft else '' }}>Jetzt aktualisieren</button>
       </form>
