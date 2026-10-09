@@ -145,6 +145,11 @@ läuft nichts mehr im Hintergrund. Nur das Browserfenster zu schließen genügt
 **Welche Version läuft?** Oben in der Kopfzeile steht ein kleines Abzeichen,
 z.B. `v0.4.1`.
 
+**Zugriff von einem anderen Rechner im Netzwerk:** Läuft die App z.B. in einer
+VM, erreichst du sie auch über `http://<IP-der-VM>:5100` von einem anderen
+Gerät im selben Netzwerk — nicht nur über `localhost` auf der VM selbst. Ohne
+Login-Schutz: nur in einem vertrauenswürdigen (Heim-)Netzwerk nutzen.
+
 ---
 
 # Schnellfilter: nur bestimmte Anbieter oder nur Filme

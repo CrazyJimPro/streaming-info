@@ -704,4 +704,4 @@ if __name__ == "__main__":
     logging.getLogger("webapp").info("Streaming-Info Version %s startet", _version())
     init_db(DB_PFAD)
     _scan_im_hintergrund_starten()
-    app.run(host="127.0.0.1", port=5100, debug=False, use_reloader=False)
+    app.run(host="0.0.0.0", port=5100, debug=False, use_reloader=False)
