@@ -274,6 +274,29 @@ section.abschnitt h2 {
 
 .karte .knopf-trailer:hover { opacity: 1; }
 
+.karte .jetzt-verfuegbar {
+  margin-top: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.karte .jetzt-verfuegbar .bezug-zeile {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.karte .jetzt-verfuegbar .bezug-art {
+  flex: none;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.karte .jetzt-verfuegbar .leer-hinweis {
+  font-size: 0.78rem;
+}
+
 .leer-hinweis {
   color: var(--muted);
   font-style: italic;

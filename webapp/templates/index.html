@@ -111,9 +111,31 @@
       <div class="titel">{{ eintrag.titel }}</div>
       <div class="datum">
         <strong>{{ eintrag.start_lesbar }}</strong>
-        {% if eintrag.countdown %}<span class="countdown">{{ eintrag.countdown }}</span>{% endif %}
+        {% if eintrag.jetzt_verfuegbar is defined %}
+          <span class="countdown">gestartet</span>
+        {% elif eintrag.countdown %}
+          <span class="countdown">{{ eintrag.countdown }}</span>
+        {% endif %}
         {% if eintrag.zusatz %}&middot; {{ eintrag.zusatz }}{% endif %}
       </div>
+      {% if eintrag.jetzt_verfuegbar is defined %}
+      <div class="jetzt-verfuegbar">
+        {% if eintrag.jetzt_verfuegbar is none %}
+          <span class="leer-hinweis">Anbieter gerade nicht abrufbar</span>
+        {% elif eintrag.jetzt_verfuegbar %}
+          {% for gruppe in eintrag.jetzt_verfuegbar %}
+          <div class="bezug-zeile">
+            <span class="bezug-art">Jetzt verfügbar &middot; {{ gruppe.beschriftung }}</span>
+            <span class="badges">
+              {% for a in gruppe.anbieter %}<span class="badge" style="background:{{ a.farbe }}">{{ a.name }}</span>{% endfor %}
+            </span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <span class="leer-hinweis">Derzeit bei keinem Anbieter in Deutschland geführt</span>
+        {% endif %}
+      </div>
+      {% else %}
       <div class="badges">
         {% if feste_farbe %}
         <span class="badge" style="background:{{ feste_farbe }}">{{ festes_label }}</span>
@@ -123,6 +145,7 @@
           {% endfor %}
         {% endif %}
       </div>
+      {% endif %}
       <div class="karten-aktionen">
         {# Merken/Entmerken gehoeren immer als Paar an die Karte: wer einen Titel
            hier merken kann, muss ihn hier auch wieder loswerden koennen. #}

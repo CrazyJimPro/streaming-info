@@ -27,6 +27,7 @@ keine geplante Aufgabe, kein Cronjob.
 | auf der Startseite nur Netflix, nur Filme o. Ä. sehen | [Schnellfilter](#schnellfilter-nur-bestimmte-anbieter-oder-nur-filme) |
 | mir vorab einen Trailer ansehen | [Trailer ansehen](#trailer-ansehen) |
 | mehr zu einem Titel erfahren (Beschreibung, Darsteller, FSK) | [Detailansicht](#detailansicht) |
+| sehen, ob ein gemerkter Titel schon läuft | ["Jetzt verfügbar" in der Merkliste](#jetzt-verfügbar-in-der-merkliste) |
 | wissen, wo ein Film oder eine Serie läuft | [Suche](#suche-wo-läuft-das) |
 | bestimmte Serien im Blick behalten | [Merkliste](#merkliste-bestimmte-titel-im-blick-behalten) |
 | meine Liste sichern | [Sicherung erstellen](#sicherung-erstellen) |
@@ -211,6 +212,21 @@ Scan gespeichert — Darsteller und FSK ändern sich nicht, würden aber unnöti
 Platz in der Datenbank belegen. Fehlt eine Angabe (z.B. Laufzeit bei manchen
 Serien, FSK bei noch nicht freigegebenen Titeln), steht das offen so da,
 statt die Karte leer zu lassen.
+
+---
+
+# "Jetzt verfügbar" in der Merkliste
+
+Ist der Starttermin eines gemerkten Titels schon vorbei, zeigt die Karte in
+der Merkliste statt eines veralteten Countdowns **„gestartet"** und darunter,
+**wo er gerade läuft** — live bei TMDB nachgefragt, genau wie bei der Suche
+„Wo läuft das?". Getrennt nach Im Abo, Kostenlos, Gratis mit Werbung, Leihen
+und Kaufen.
+
+„Anbieter gerade nicht abrufbar" heißt: der Abruf ist fehlgeschlagen, bitte
+die Seite neu laden. „Derzeit bei keinem Anbieter in Deutschland geführt"
+heißt: TMDB kennt aktuell wirklich keinen — das kann sich in den nächsten
+Tagen noch ändern.
 
 ---
 

@@ -52,7 +52,7 @@ from scraper.storage import (  # noqa: E402
     hole_vorkommende_sprachen,
     init_db,
 )
-from scraper.tmdb import hole_details, suche_titel, suche_verfuegbarkeit  # noqa: E402
+from scraper.tmdb import hole_details, hole_verfuegbarkeit_mehrere, suche_titel, suche_verfuegbarkeit  # noqa: E402
 
 app = Flask(__name__)
 
@@ -326,6 +326,33 @@ def _merkliste_aufbereiten(zeilen: list[dict], heute: date) -> list[dict]:
     return zeilen
 
 
+def _markiere_jetzt_verfuegbar(merkliste: list[dict], api_key: str, heute: date) -> None:
+    """Fuer Merkliste-Titel, deren Starttermin schon vorbei ist: live
+    nachsehen, wo sie gerade laufen, statt das veraltete Datum stehen zu
+    lassen - sonst wirkt eine laengst gestartete Serie wie "startet heute".
+
+    Setzt eintrag["jetzt_verfuegbar"] nur bei bereits gestarteten Titeln
+    (Liste von Anbieter-Gruppen, leer = TMDB kennt keinen, None = Abruf
+    fehlgeschlagen) - Titel ohne oder mit zukuenftigem Termin bleiben
+    unangetastet, das Fehlen des Schluessels ist dort das Signal fuers
+    Template."""
+    gestartet = [
+        e
+        for e in merkliste
+        if e.get("startdatum") and datetime.strptime(e["startdatum"], "%Y-%m-%d").date() <= heute
+    ]
+    if not gestartet or not api_key:
+        return
+    farben = {a["tmdb_name"]: a["farbe"] for a in lade_anbieter() if a.get("tmdb_name")}
+    ergebnis = hole_verfuegbarkeit_mehrere(neue_session(), api_key, gestartet)
+    for eintrag in gestartet:
+        bezug = ergebnis.get((eintrag["tmdb_id"], eintrag["medientyp"]))
+        if bezug is not None:
+            for gruppe in bezug:
+                gruppe["anbieter"] = [{"name": n, "farbe": farben.get(n, "#6b7280")} for n in gruppe["anbieter"]]
+        eintrag["jetzt_verfuegbar"] = bezug
+
+
 @app.route("/")
 def index():
     einstellungen = lade_einstellungen()
@@ -357,9 +384,11 @@ def index():
     merkliste = _merkliste_aufbereiten(
         hole_merkliste_eintraege(einstellungen.get("merkliste", []), db_pfad=DB_PFAD), heute
     )
+    api_key = lade_api_schluessel()
+    _markiere_jetzt_verfuegbar(merkliste, api_key, heute)
 
     status = _status_aufbereiten(hole_quellen_status(db_pfad=DB_PFAD))
-    api_schluessel_fehlt = not lade_api_schluessel()
+    api_schluessel_fehlt = not api_key
 
     # Einmaliger Wegweiser nach einer frischen Installation - das Gegenstueck
     # zur Frage "Daten aus einer Sicherung uebernehmen?", die beim Abo-Tracker
