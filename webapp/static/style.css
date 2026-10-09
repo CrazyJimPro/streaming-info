@@ -146,7 +146,11 @@ section.abschnitt h2 {
 
 .karten-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  /* Feste Obergrenze statt 1fr: bei wenigen Karten in einer breiten Zeile
+     wuerde 1fr den freien Platz auf die vorhandenen Karten verteilen und sie
+     unverhaeltnismaessig gross ziehen. */
+  grid-template-columns: repeat(auto-fill, minmax(170px, 200px));
+  justify-content: start;
   gap: 1.25rem;
 }
 
