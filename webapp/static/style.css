@@ -264,6 +264,16 @@ section.abschnitt h2 {
 
 .karte .ausblenden-formular button:hover { opacity: 1; }
 
+.karte .knopf-trailer {
+  width: 100%;
+  font-size: 0.72rem;
+  padding: 0.3rem;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.karte .knopf-trailer:hover { opacity: 1; }
+
 .leer-hinweis {
   color: var(--muted);
   font-style: italic;
@@ -406,6 +416,13 @@ section.abschnitt h2 {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+}
+
+.such-trailer {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  margin-top: 0.4rem;
+  display: inline-block;
 }
 
 .gemerkt-hinweis {

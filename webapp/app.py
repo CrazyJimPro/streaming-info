@@ -21,6 +21,7 @@ import time
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from urllib.parse import quote_plus
 
 PROJEKT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJEKT_ROOT) not in sys.path:
@@ -36,7 +37,7 @@ from scraper.einstellungen import (  # noqa: E402
     speichere_einstellungen,
 )
 from scraper.base import TmdbFehler, neue_session  # noqa: E402
-from scraper.filter import SPRACHNAMEN, filtere_zeilen  # noqa: E402
+from scraper.filter import SPRACHNAMEN, filtere_zeilen, genre_ids_aus_zeile  # noqa: E402
 from scraper.sicherung import (  # noqa: E402
     SicherungsFehler,
     erstelle_sicherung,
@@ -255,6 +256,9 @@ def _starts_aufbereiten(zeilen: list[dict], anbieter_karte: dict[str, dict], heu
         eintrag["poster_url"] = _poster_url(eintrag.get("poster_pfad"))
         eintrag["start_lesbar"] = _datum_lesbar(eintrag.get("startdatum"))
         eintrag["countdown"] = _countdown_text(tage)
+        eintrag["trailer_url"] = _trailer_url(
+            eintrag["titel"], eintrag["medientyp"], genre_ids_aus_zeile(eintrag), eintrag.get("art")
+        )
         # Staffelstarts brauchen den Zusatz, sonst sieht die Kachel aus wie
         # eine brandneue Serie.
         if eintrag.get("art") == "staffel" and eintrag.get("staffel"):
@@ -268,6 +272,30 @@ def _starts_aufbereiten(zeilen: list[dict], anbieter_karte: dict[str, dict], heu
 
 
 DIGITAL_FARBE = "#6b7280"
+
+# TMDB-Genre-ID 28 = "Action" (nur bei Filmen - der Actionfilme-Kanal ist auf
+# Filme ausgelegt, Serien landen immer beim Hauptkanal).
+TMDB_GENRE_ACTION = 28
+
+# Kanal-Suchseite statt direktem Videolink (bewusste Nutzerentscheidung,
+# v0.10.0): kein zusaetzlicher YouTube-API-Schluessel noetig, dafuer waehlt der
+# Nutzer den Treffer noch per Klick. Handles per Hand auf youtube.com
+# nachgeschlagen - weichen vom Anzeigenamen ab (z.B. "KinoCheck Action" liegt
+# unter @ActionFilme).
+TRAILER_KANAL_HAUPT = "KinoCheck"
+TRAILER_KANAL_HEIMKINO = "Heimkino"
+TRAILER_KANAL_ACTION = "ActionFilme"
+
+
+def _trailer_url(titel: str, medientyp: str, genre_ids: set[int], art: str | None = None) -> str:
+    if art == "digital":
+        kanal = TRAILER_KANAL_HEIMKINO
+    elif medientyp == "film" and TMDB_GENRE_ACTION in genre_ids:
+        kanal = TRAILER_KANAL_ACTION
+    else:
+        kanal = TRAILER_KANAL_HAUPT
+    query = quote_plus(f"{titel} Trailer")
+    return f"https://www.youtube.com/@{kanal}/search?query={query}"
 
 
 def _schnellfilter_quellen(
@@ -298,6 +326,9 @@ def _merkliste_aufbereiten(zeilen: list[dict], heute: date) -> list[dict]:
     for eintrag in zeilen:
         eintrag["poster_url"] = _poster_url(eintrag.get("poster_pfad"))
         eintrag["anbieter_liste"] = []
+        eintrag["trailer_url"] = _trailer_url(
+            eintrag["titel"], eintrag["medientyp"], genre_ids_aus_zeile(eintrag), eintrag.get("art")
+        )
         datum = eintrag.get("startdatum")
         if datum:
             eintrag["start_lesbar"] = _datum_lesbar(datum)
@@ -611,6 +642,7 @@ def suche():
                     "medientyp": titel.medientyp,
                     "gemerkt": (titel.tmdb_id, titel.medientyp) in gemerkt,
                     "poster_url": _poster_url(titel.poster_pfad),
+                    "trailer_url": _trailer_url(titel.titel, titel.medientyp, set(titel.genre_ids)),
                     "bezug": bezug,
                 }
             )
