@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS starts (
     art TEXT NOT NULL,
     staffel INTEGER,
     gesehen_am TEXT NOT NULL,
+    erstmals_gesehen_am TEXT,
     PRIMARY KEY (tmdb_id, medientyp, anbieter, art)
 );
 
@@ -79,6 +80,13 @@ def init_db(db_pfad: Path = DB_PFAD) -> None:
         spalten = {row["name"] for row in conn.execute("PRAGMA table_info(titel)")}
         if "originalsprache" not in spalten:
             conn.execute("ALTER TABLE titel ADD COLUMN originalsprache TEXT")
+        # Fuer "Neu seit letztem Besuch" (ab v0.13.0): Zeilen von vor diesem
+        # Feld bekommen gesehen_am als Ersatzwert, statt beim naechsten Besuch
+        # geschlossen als "neu" aufzuleuchten.
+        start_spalten = {row["name"] for row in conn.execute("PRAGMA table_info(starts)")}
+        if "erstmals_gesehen_am" not in start_spalten:
+            conn.execute("ALTER TABLE starts ADD COLUMN erstmals_gesehen_am TEXT")
+            conn.execute("UPDATE starts SET erstmals_gesehen_am = gesehen_am WHERE erstmals_gesehen_am IS NULL")
 
 
 def speichere_titel(eintraege: list[TitelEintrag], db_pfad: Path = DB_PFAD) -> None:
@@ -123,15 +131,15 @@ def speichere_starts(eintraege: list[StartEintrag], heute: date, db_pfad: Path =
     with closing(_verbindung(db_pfad)) as conn, conn:
         conn.executemany(
             """
-            INSERT INTO starts (tmdb_id, medientyp, anbieter, startdatum, art, staffel, gesehen_am)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO starts (tmdb_id, medientyp, anbieter, startdatum, art, staffel, gesehen_am, erstmals_gesehen_am)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(tmdb_id, medientyp, anbieter, art) DO UPDATE SET
                 startdatum = excluded.startdatum,
                 staffel = excluded.staffel,
                 gesehen_am = excluded.gesehen_am
             """,
             [
-                (e.tmdb_id, e.medientyp, e.anbieter, e.startdatum, e.art, e.staffel, heute_iso)
+                (e.tmdb_id, e.medientyp, e.anbieter, e.startdatum, e.art, e.staffel, heute_iso, heute_iso)
                 for e in eintraege
             ],
         )
@@ -269,7 +277,7 @@ def hole_starts_im_zeitraum(
     with closing(_verbindung(db_pfad)) as conn:
         rows = conn.execute(
             f"""
-            SELECT t.*, s.anbieter, s.startdatum, s.art, s.staffel
+            SELECT t.*, s.anbieter, s.startdatum, s.art, s.staffel, s.erstmals_gesehen_am
             FROM starts s
             JOIN titel t ON t.tmdb_id = s.tmdb_id AND t.medientyp = s.medientyp
             WHERE s.startdatum >= ? AND s.startdatum <= ? AND s.art IN ({platzhalter})

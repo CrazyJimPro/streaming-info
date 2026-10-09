@@ -81,6 +81,13 @@ _scan_sperre = threading.Lock()
 _scan_status: dict[str, object] = {"laeuft": False, "fehler": None, "fertig_am": None}
 _laufender_prozess: subprocess.Popen | None = None
 
+# Fuer "Neu seit letztem Besuch": der Stand VOR diesem App-Start, eingefroren
+# fuer die ganze laufende Sitzung (auch bei mehreren Seitenaufrufen/einem
+# manuellen "Jetzt aktualisieren" bleibt die Markierung stabil - sie wechselt
+# erst beim naechsten App-Start). Tagesgenau, nicht auf die Sekunde: passt zu
+# erstmals_gesehen_am, das ebenfalls nur ein Datum ist.
+_neu_seit: str | None = None
+
 
 def _logging_einrichten() -> None:
     LOG_PFAD.parent.mkdir(parents=True, exist_ok=True)
@@ -257,6 +264,8 @@ def _starts_aufbereiten(zeilen: list[dict], anbieter_karte: dict[str, dict], heu
         eintrag["start_lesbar"] = _datum_lesbar(eintrag.get("startdatum"))
         eintrag["countdown"] = _countdown_text(tage)
         eintrag["trailer_url"] = _trailer_url(eintrag["titel"])
+        erstmals = eintrag.get("erstmals_gesehen_am")
+        eintrag["neu"] = bool(_neu_seit and erstmals and erstmals > _neu_seit)
         # Staffelstarts brauchen den Zusatz, sonst sieht die Kachel aus wie
         # eine brandneue Serie.
         if eintrag.get("art") == "staffel" and eintrag.get("staffel"):
@@ -747,9 +756,22 @@ def ausblenden():
     return redirect(url_for("index"))
 
 
+def _sitzung_cutoff_setzen() -> None:
+    """Liest den Besuchs-Stand von VOR diesem Start in _neu_seit ein (fuer die
+    "Neu"-Markierung dieser Sitzung) und schreibt sofort den heutigen Tag als
+    neuen Stand fest - jeder App-Start zaehlt als Besuch, unabhaengig davon,
+    ob der Nutzer die Seite danach ueberhaupt oeffnet."""
+    global _neu_seit
+    einstellungen = lade_einstellungen()
+    _neu_seit = einstellungen.get("letzter_besuch_am")
+    einstellungen["letzter_besuch_am"] = date.today().isoformat()
+    speichere_einstellungen(einstellungen)
+
+
 if __name__ == "__main__":
     _logging_einrichten()
     logging.getLogger("webapp").info("Streaming-Info Version %s startet", _version())
     init_db(DB_PFAD)
+    _sitzung_cutoff_setzen()
     _scan_im_hintergrund_starten()
     app.run(host="0.0.0.0", port=5100, debug=False, use_reloader=False)

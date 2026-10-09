@@ -28,6 +28,7 @@ keine geplante Aufgabe, kein Cronjob.
 | mir vorab einen Trailer ansehen | [Trailer ansehen](#trailer-ansehen) |
 | mehr zu einem Titel erfahren (Beschreibung, Darsteller, FSK) | [Detailansicht](#detailansicht) |
 | sehen, ob ein gemerkter Titel schon läuft | ["Jetzt verfügbar" in der Merkliste](#jetzt-verfügbar-in-der-merkliste) |
+| auf einen Blick sehen, was neu dazugekommen ist | ["Neu" seit dem letzten Besuch](#neu-seit-dem-letzten-besuch) |
 | wissen, wo ein Film oder eine Serie läuft | [Suche](#suche-wo-läuft-das) |
 | bestimmte Serien im Blick behalten | [Merkliste](#merkliste-bestimmte-titel-im-blick-behalten) |
 | meine Liste sichern | [Sicherung erstellen](#sicherung-erstellen) |
@@ -227,6 +228,23 @@ und Kaufen.
 die Seite neu laden. „Derzeit bei keinem Anbieter in Deutschland geführt"
 heißt: TMDB kennt aktuell wirklich keinen — das kann sich in den nächsten
 Tagen noch ändern.
+
+---
+
+# "Neu" seit dem letzten Besuch
+
+Karten in der Übersicht (Streaming, Kino, Digital), die seit deinem letzten
+**App-Start** neu dazugekommen sind, tragen oben links ein rotes **„Neu"**.
+
+- Die Markierung bezieht sich auf den **App-Start**, nicht auf das Neuladen
+  der Seite: Innerhalb einer laufenden Sitzung bleibt sie gleich, auch bei
+  „Jetzt aktualisieren" oder mehreren Seitenaufrufen. Erst der nächste Start
+  setzt sie zurück.
+- Die Merkliste hat keine „Neu"-Markierung — dort zeigt ein bereits
+  gestarteter Titel stattdessen ["Jetzt verfügbar"](#jetzt-verfügbar-in-der-merkliste).
+- Beim allerersten Start nach der Installation (oder nach diesem Update) ist
+  noch nichts als „neu" markiert — erst ab dem zweiten Besuch gibt es eine
+  Vergleichsbasis.
 
 ---
 

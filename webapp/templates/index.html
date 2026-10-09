@@ -102,6 +102,7 @@
   {% macro kachel(eintrag, feste_farbe=None, festes_label=None, gemerkt=False) %}
   <article class="karte" data-medientyp="{{ eintrag.medientyp }}"
            data-quellen="{{ eintrag.anbieter_liste | map(attribute='schluessel') | join(' ') }}">
+    {% if eintrag.neu %}<span class="neu-band">Neu</span>{% endif %}
     {% if eintrag.poster_url %}
       <img class="poster" src="{{ eintrag.poster_url }}" alt="" loading="lazy">
     {% else %}
