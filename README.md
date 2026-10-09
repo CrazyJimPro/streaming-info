@@ -179,17 +179,10 @@ Gut zu wissen:
 # Trailer ansehen
 
 Auf jeder Karte — Übersicht, Merkliste und Suchtreffer — steht ein Knopf
-**„▶ Trailer"**. Ein Klick öffnet in einem neuen Tab die Suche eines deutschen
-YouTube-Trailer-Kanals (KinoCheck) nach genau diesem Titel. Den passenden
-Treffer wählst du dort noch selbst per Klick aus — die App rät nicht, welches
-Video das richtige ist.
-
-Welcher der drei KinoCheck-Kanäle verwendet wird, richtet sich danach, wo
-Trailer in dieser Sprache am ehesten zu finden sind:
-
-- **Filme mit digitalem Start** (Abschnitt „Digital") → *KinoCheck Heimkino*
-- **Action-Filme** (laut TMDB-Genre) → *KinoCheck Action*
-- Alles andere (Kinostarts, Serien, Staffeln) → *KinoCheck* (Hauptkanal)
+**„▶ Trailer"**. Ein Klick öffnet in einem neuen Tab die Suche des deutschen
+YouTube-Kanals **KinoCheck** nach genau diesem Titel. Den passenden Treffer
+wählst du dort noch selbst per Klick aus — die App rät nicht, welches Video
+das richtige ist.
 
 Findet sich dort kein Treffer, zeigt YouTube ganz normal „Keine Ergebnisse" —
 das ist dann eine Lücke bei KinoCheck selbst, kein Fehler der App.

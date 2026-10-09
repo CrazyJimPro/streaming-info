@@ -42,7 +42,7 @@ SPRACHNAMEN = {
 }
 
 
-def genre_ids_aus_zeile(zeile: dict) -> set[int]:
+def _genre_ids(zeile: dict) -> set[int]:
     roh = zeile.get("genre_ids") or ""
     return {int(g) for g in roh.split(",") if g}
 
@@ -71,6 +71,6 @@ def filtere_zeilen(zeilen: list[dict], einstellungen: dict) -> list[dict]:
         if sprachen and sprache and sprache not in sprachen:
             continue
         # Kein Genre ausgewaehlt = kein Filter, alles anzeigen.
-        if not aktive_genres or (genre_ids_aus_zeile(zeile) & aktive_genres):
+        if not aktive_genres or (_genre_ids(zeile) & aktive_genres):
             ergebnis.append(zeile)
     return ergebnis
