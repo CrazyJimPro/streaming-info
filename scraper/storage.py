@@ -211,9 +211,16 @@ def entferne_unbestaetigte_starts(anbieter: str, stand: date, db_pfad: Path = DB
 
 def raeume_starts_auf(vor_datum: date, db_pfad: Path = DB_PFAD) -> int:
     """Entfernt Startereignisse, die laengst vorbei sind. Ohne das wuechse die
-    Tabelle mit jedem Lauf weiter, obwohl nur Zukuenftiges angezeigt wird."""
+    Tabelle mit jedem Lauf weiter, obwohl nur Zukuenftiges angezeigt wird.
+
+    Die Merkliste bleibt ausgenommen: Ein gemerkter, laengst erschienener Film
+    traegt bewusst seinen vergangenen Termin (Anzeige "gestartet"), und ihre
+    Zeilen raeumt ohnehin entferne_unbestaetigte_starts bei jedem Lauf auf."""
     with closing(_verbindung(db_pfad)) as conn, conn:
-        cur = conn.execute("DELETE FROM starts WHERE startdatum < ?", (vor_datum.isoformat(),))
+        cur = conn.execute(
+            "DELETE FROM starts WHERE startdatum < ? AND art != 'merkliste'",
+            (vor_datum.isoformat(),),
+        )
         return cur.rowcount
 
 

@@ -358,7 +358,11 @@ def hole_merkliste_termine(
                     staffel=staffel if naechste.get("episode_number") == 1 else None,
                 )
         else:
-            datum = _fruehester_filmtermin(detail, ab)
+            # Ist der Film schon erschienen, gilt der letzte vergangene Termin:
+            # Mit einem Datum in der Vergangenheit zeigt die Startseite
+            # "gestartet" samt Anbietern. Ohne ihn fiele ein gestern
+            # erschienener Film auf "Noch kein Termin bekannt" zurueck.
+            datum = _fruehester_filmtermin(detail, ab) or _letzter_filmtermin(detail, ab)
             if datum:
                 start = StartEintrag(
                     tmdb_id=titel.tmdb_id,
@@ -369,6 +373,25 @@ def hole_merkliste_termine(
                 )
         ergebnisse.append((titel, start))
     return ergebnisse
+
+
+def _letzter_filmtermin(detail: dict, ab: date) -> str | None:
+    """Gegenstueck zu _fruehester_filmtermin fuer bereits erschienene Filme:
+    der juengste deutsche Kino- oder Digitaltermin vor 'ab', ersatzweise das
+    allgemeine Erscheinungsdatum."""
+    kandidaten: list[str] = []
+    for land in (detail.get("release_dates") or {}).get("results", []):
+        if land.get("iso_3166_1") != "DE":
+            continue
+        for rd in land.get("release_dates", []):
+            if rd.get("type") in (2, 3, DIGITAL_RELEASE_TYPE):
+                datum = (rd.get("release_date") or "")[:10]
+                if datum and datum < ab.isoformat():
+                    kandidaten.append(datum)
+    allgemein = detail.get("release_date")
+    if not kandidaten and allgemein and allgemein < ab.isoformat():
+        kandidaten.append(allgemein)
+    return max(kandidaten) if kandidaten else None
 
 
 def _fruehester_filmtermin(detail: dict, ab: date) -> str | None:
