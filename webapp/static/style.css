@@ -220,6 +220,19 @@ button.primaer, .knopf.primaer {
   margin-bottom: 1.5rem;
 }
 
+.rueckgaengig-leiste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rueckgaengig-leiste form { margin: 0; }
+
+.rueckgaengig-leiste button { padding: 0.35rem 0.9rem; font-size: 0.85rem; }
+
+.details-aktionen form .leer-hinweis { margin-right: 0.4rem; }
+
 .scan-hinweis.fehler { border-color: var(--danger-border); color: var(--danger-fg); }
 
 .setup-hinweis {
@@ -424,6 +437,14 @@ section.abschnitt h2 {
 }
 
 .details-aktionen form { margin: 0; }
+
+.details-aktionen button, .details-aktionen .knopf { white-space: nowrap; }
+
+/* Auf dem Handy waere neben dem 180px-Poster kaum Platz fuer Text und Knoepfe. */
+@media (max-width: 560px) {
+  .details-ansicht { flex-direction: column; }
+  .details-ansicht .such-poster { flex-basis: auto; width: 140px; }
+}
 
 .karte .jetzt-verfuegbar {
   margin-top: 0.3rem;

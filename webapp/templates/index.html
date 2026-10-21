@@ -37,6 +37,20 @@
     </div>
   </header>
 
+  {% if rueckgaengig %}
+  <div class="scan-hinweis rueckgaengig-leiste" role="status">
+    <span>„{{ rueckgaengig.titel or 'Titel' }}" ausgeblendet.</span>
+    <form method="post" action="{{ url_for('einblenden') }}">
+      <input type="hidden" name="tmdb_id" value="{{ rueckgaengig.tmdb_id }}">
+      <input type="hidden" name="medientyp" value="{{ rueckgaengig.medientyp }}">
+      <button type="submit" class="primaer">Rückgängig</button>
+    </form>
+  </div>
+  {# Bewusst bleibt ?ausgeblendet= in der Adresszeile stehen: endet gerade ein
+     Scan, laedt die Seite sich selbst neu - ohne den Parameter waere die Leiste
+     dann nach wenigen Sekunden weg, bevor man Rueckgaengig klicken konnte. #}
+  {% endif %}
+
   <form class="such-formular" method="get" action="{{ url_for('suche') }}">
     <input type="search" name="q" placeholder="Film oder Serie suchen – wo läuft sie?" required>
     <button class="primaer" type="submit">Suchen</button>

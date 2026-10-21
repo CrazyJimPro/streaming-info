@@ -345,8 +345,17 @@ Termin in der TMDB-Datenbank.
 
 Das Gegenstück: Neben dem Stern sitzt auf jeder Karte in der Übersicht ein
 **✕** (auch auf der Detailseite als **„✕ Ausblenden"**).
-Damit verschwindet ein Titel dauerhaft aus der Liste. Rückgängig machst du das
-unter *Einstellungen → Ausgeblendete Titel → entfernen → Speichern*.
+Damit verschwindet ein Titel dauerhaft aus der Liste.
+
+Rückgängig machen geht auf drei Wegen:
+
+- **Gleich danach:** Oben auf der Startseite erscheint
+  „„Titel" ausgeblendet." mit dem Knopf **Rückgängig** — ein Klick, und die
+  Karte ist wieder da. Die Leiste verschwindet, sobald du etwas anderes
+  anklickst.
+- **Später, auf der Detailseite** des Titels (z.B. über die Suche gefunden):
+  dort steht „Ausgeblendet" mit dem Knopf **Wieder einblenden**.
+- **In den Einstellungen:** *Ausgeblendete Titel → entfernen → Speichern*.
 
 ---
 

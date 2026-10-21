@@ -406,6 +406,28 @@ def _abschnitte_laden(einstellungen: dict, anbieter_karte: dict, heute: date) ->
     return streaming, kino, digital, bis
 
 
+def _gerade_ausgeblendet(kennung: str | None, einstellungen: dict) -> dict | None:
+    """Fuer die Rueckgaengig-Leiste nach dem Ausblenden: 'serie-1234' aus dem
+    Ruecksprung von /ausblenden wieder zum Eintrag der Ausblendliste. Ist der
+    Titel inzwischen wieder eingeblendet (oder die Kennung Unsinn), gibt es
+    keine Leiste - so verschwindet sie nach dem Rueckgaengig von selbst."""
+    if not kennung or "-" not in kennung:
+        return None
+    medientyp, _, roh_id = kennung.partition("-")
+    try:
+        tmdb_id = int(roh_id)
+    except ValueError:
+        return None
+    return next(
+        (
+            e
+            for e in einstellungen.get("ausgeblendet", [])
+            if e["tmdb_id"] == tmdb_id and e["medientyp"] == medientyp
+        ),
+        None,
+    )
+
+
 @app.route("/")
 def index():
     einstellungen = lade_einstellungen()
@@ -444,6 +466,7 @@ def index():
 
     return render_template(
         "index.html",
+        rueckgaengig=_gerade_ausgeblendet(request.args.get("ausgeblendet"), einstellungen),
         streaming=streaming,
         digital=digital,
         kino=kino,
@@ -833,7 +856,30 @@ def ausblenden():
     if not any(e["tmdb_id"] == eintrag["tmdb_id"] and e["medientyp"] == eintrag["medientyp"] for e in daten.get("ausgeblendet", [])):
         daten.setdefault("ausgeblendet", []).append(eintrag)
         speichere_einstellungen(daten)
-    return redirect(url_for("index"))
+    # Die Startseite zeigt daraufhin oben "X ausgeblendet - Rueckgaengig".
+    return redirect(url_for("index", ausgeblendet=f"{medientyp}-{tmdb_id}"))
+
+
+@app.route("/einblenden", methods=["POST"])
+def einblenden():
+    """Gegenstueck zu /ausblenden (Rueckgaengig-Leiste auf der Startseite,
+    Detailseite eines ausgeblendeten Titels) - ohne Umweg ueber die
+    Einstellungen. Idempotent: ein schon sichtbarer Titel bleibt einfach
+    sichtbar."""
+    weiter = _lokales_ziel(request.form.get("weiter")) or url_for("index")
+    try:
+        tmdb_id = int(request.form["tmdb_id"])
+    except (KeyError, ValueError):
+        return redirect(weiter)
+    medientyp = request.form.get("medientyp")
+    daten = lade_einstellungen()
+    behalten = [
+        e for e in daten.get("ausgeblendet", []) if not (e["tmdb_id"] == tmdb_id and e["medientyp"] == medientyp)
+    ]
+    if len(behalten) != len(daten.get("ausgeblendet", [])):
+        daten["ausgeblendet"] = behalten
+        speichere_einstellungen(daten)
+    return redirect(weiter)
 
 
 def _sitzung_cutoff_setzen() -> None:
