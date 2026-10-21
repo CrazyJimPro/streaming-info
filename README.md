@@ -224,7 +224,9 @@ statt die Karte leer zu lassen.
 
 Oben auf der Detailseite stehen außerdem **▶ Trailer**, **☆ Merken** bzw.
 **★ Nicht mehr merken** und **✕ Ausblenden**. **Zurück** führt danach wieder
-dorthin, wo du hergekommen bist (Übersicht oder Suche).
+dorthin, wo du hergekommen bist (Übersicht oder Suche) — auf der Übersicht
+sogar an genau die Stelle, an der die Karte stand, statt an den Seitenanfang.
+Dasselbe gilt nach einem Klick auf ☆/★ oder ✕ direkt an einer Karte.
 
 ---
 
@@ -365,9 +367,9 @@ Damit verschwindet ein Titel dauerhaft aus der Liste.
 
 Rückgängig machen geht auf drei Wegen:
 
-- **Gleich danach:** Oben auf der Startseite erscheint
+- **Gleich danach:** Unten im Bild erscheint
   „„Titel" ausgeblendet." mit dem Knopf **Rückgängig** — ein Klick, und die
-  Karte ist wieder da. Die Leiste verschwindet, sobald du etwas anderes
+  Karte ist wieder da, an derselben Stelle. Die Leiste verschwindet, sobald du etwas anderes
   anklickst.
 - **Später, auf der Detailseite** des Titels (z.B. über die Suche gefunden):
   dort steht „Ausgeblendet" mit dem Knopf **Wieder einblenden**.

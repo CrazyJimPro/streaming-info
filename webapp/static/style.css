@@ -16,6 +16,7 @@
   --surface: rgba(15,23,42,0.05);
   --surface-border: rgba(15,23,42,0.14);
   --header-bg: rgba(255,255,255,0.6);
+  --toast-bg: rgba(255,255,255,0.94);
   --header-border: rgba(15,23,42,0.08);
   --chip-bg: rgba(15,23,42,0.06);
   --link: #0e7490;
@@ -52,6 +53,7 @@
     --surface: rgba(255,255,255,0.08);
     --surface-border: rgba(255,255,255,0.16);
     --header-bg: rgba(255,255,255,0.05);
+    --toast-bg: rgba(28,18,51,0.94);
     --header-border: rgba(255,255,255,0.10);
     --chip-bg: rgba(255,255,255,0.1);
     --link: #67e8f9;
@@ -77,6 +79,7 @@
   --surface: rgba(255,255,255,0.08);
   --surface-border: rgba(255,255,255,0.16);
   --header-bg: rgba(255,255,255,0.05);
+  --toast-bg: rgba(28,18,51,0.94);
   --header-border: rgba(255,255,255,0.10);
   --chip-bg: rgba(255,255,255,0.1);
   --link: #67e8f9;
@@ -101,6 +104,7 @@
   --surface: rgba(15,23,42,0.05);
   --surface-border: rgba(15,23,42,0.14);
   --header-bg: rgba(255,255,255,0.6);
+  --toast-bg: rgba(255,255,255,0.94);
   --header-border: rgba(15,23,42,0.08);
   --chip-bg: rgba(15,23,42,0.06);
   --link: #0e7490;
@@ -239,7 +243,19 @@ button.primaer, .knopf.primaer {
   margin-bottom: 1.5rem;
 }
 
+/* Schwebt unten im Bild: nach dem Ausblenden rollt die Seite an die alte
+   Stelle zurueck, eine Leiste oben auf der Seite waere dann ausser Sicht. */
 .rueckgaengig-leiste {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  z-index: 10;
+  margin: 0;
+  max-width: calc(100vw - 2rem);
+  background: var(--toast-bg);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  width: max-content;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
