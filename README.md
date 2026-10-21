@@ -187,7 +187,8 @@ Gut zu wissen:
 
 # Trailer ansehen
 
-Auf jeder Karte — Übersicht, Merkliste und Suchtreffer — steht ein Knopf
+Auf der [Detailseite](#detailansicht) jedes Titels (Klick auf Poster oder
+Titel einer Karte) und bei jedem Suchtreffer steht ein Knopf
 **„▶ Trailer"**. Ein Klick öffnet in einem neuen Tab die Suche des deutschen
 YouTube-Kanals **KinoCheck** nach genau diesem Titel. Den passenden Treffer
 wählst du dort noch selbst per Klick aus — die App rät nicht, welches Video
@@ -200,8 +201,8 @@ das ist dann eine Lücke bei KinoCheck selbst, kein Fehler der App.
 
 # Detailansicht
 
-Auf jeder Karte steht neben „▶ Trailer" ein Knopf **„ℹ Details"**. Er öffnet
-eine eigene Seite mit allem, was TMDB zu dem Titel führt:
+Ein Klick auf **Poster oder Titel** einer Karte (in der Suche: **„ℹ Details"**)
+öffnet eine eigene Seite mit allem, was TMDB zu dem Titel führt:
 
 - Laufzeit (Filme) bzw. Episodenlänge (Serien)
 - deutsche FSK-Freigabe
@@ -214,6 +215,10 @@ Scan gespeichert — Darsteller und FSK ändern sich nicht, würden aber unnöti
 Platz in der Datenbank belegen. Fehlt eine Angabe (z.B. Laufzeit bei manchen
 Serien, FSK bei noch nicht freigegebenen Titeln), steht das offen so da,
 statt die Karte leer zu lassen.
+
+Oben auf der Detailseite stehen außerdem **▶ Trailer**, **☆ Merken** bzw.
+**★ Nicht mehr merken** und **✕ Ausblenden**. **Zurück** führt danach wieder
+dorthin, wo du hergekommen bist (Übersicht oder Suche).
 
 ---
 
@@ -317,11 +322,10 @@ werden einzeln bei TMDB abgefragt — ohne jeden Filter.
    gespeichert.**
 
 Zum Entfernen: in der Liste beim Titel auf *entfernen* klicken, dann wieder
-*Speichern*. Schneller geht es direkt auf der Startseite: Jede Karte in der
-Merkliste hat einen Knopf **„Nicht mehr merken"**.
-Umgekehrt hat **jede Karte** in der Übersicht (Streaming, Kino, Digital) einen Knopf
-**„⭐ Merken"** — so wanderst du eine Serie, die dir beim Start auffällt, mit einem
-Klick auf die Merkliste.
+*Speichern*. Schneller geht es direkt auf der Startseite: Oben rechts auf
+jedem Poster sitzt ein **Stern**. **☆** (leer) setzt den Titel auf die
+Merkliste, **★** (gelb) nimmt ihn wieder herunter. So wanderst du eine Serie,
+die dir beim Start auffällt, mit einem Klick auf die Merkliste.
 
 ### Was du erwarten kannst
 
@@ -339,7 +343,8 @@ Termin in der TMDB-Datenbank.
 
 ### Titel ausblenden
 
-Das Gegenstück: Auf jeder Karte in der Übersicht gibt es **„Ausblenden"**.
+Das Gegenstück: Neben dem Stern sitzt auf jeder Karte in der Übersicht ein
+**✕** (auch auf der Detailseite als **„✕ Ausblenden"**).
 Damit verschwindet ein Titel dauerhaft aus der Liste. Rückgängig machst du das
 unter *Einstellungen → Ausgeblendete Titel → entfernen → Speichern*.
 

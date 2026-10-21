@@ -101,16 +101,48 @@
   {% endif %}
 
   {% macro kachel(eintrag, feste_farbe=None, festes_label=None, gemerkt=False) %}
+  {% set details_url = url_for('details', medientyp=eintrag.medientyp, tmdb_id=eintrag.tmdb_id) %}
+  {% set ist_gemerkt = gemerkt or (eintrag.tmdb_id, eintrag.medientyp) in gemerkt_ids %}
   <article class="karte" data-medientyp="{{ eintrag.medientyp }}"
            data-quellen="{{ eintrag.anbieter_liste | map(attribute='schluessel') | join(' ') }}">
     {% if eintrag.neu %}<span class="neu-band">Neu</span>{% endif %}
+    {# Nur zwei kleine Knoepfe auf der Karte - Trailer, Beschreibung und die
+       ausfuehrlichen Aktionen stehen auf der Detailseite (Klick auf Poster
+       oder Titel). Merken/Entmerken bleiben trotzdem als Paar hier: wer einen
+       Titel hier merken kann, muss ihn hier auch wieder loswerden koennen. #}
+    <div class="karten-aktionen">
+      {% if ist_gemerkt %}
+      <form method="post" action="{{ url_for('entmerken') }}">
+        <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
+        <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
+        <button type="submit" class="icon-knopf gemerkt" title="Nicht mehr merken" aria-label="Nicht mehr merken">★</button>
+      </form>
+      {% else %}
+      <form method="post" action="{{ url_for('merken') }}">
+        <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
+        <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
+        <input type="hidden" name="titel" value="{{ eintrag.titel }}">
+        <button type="submit" class="icon-knopf" title="Merken" aria-label="Merken">☆</button>
+      </form>
+      {% endif %}
+      {% if not gemerkt %}
+      <form method="post" action="{{ url_for('ausblenden') }}">
+        <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
+        <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
+        <input type="hidden" name="titel" value="{{ eintrag.titel }}">
+        <button type="submit" class="icon-knopf" title="Ausblenden" aria-label="Ausblenden">✕</button>
+      </form>
+      {% endif %}
+    </div>
+    <a class="poster-link" href="{{ details_url }}" tabindex="-1" aria-hidden="true">
     {% if eintrag.poster_url %}
       <img class="poster" src="{{ eintrag.poster_url }}" alt="" loading="lazy">
     {% else %}
       <div class="poster-platzhalter">{{ eintrag.titel }}</div>
     {% endif %}
+    </a>
     <div class="inhalt">
-      <div class="titel">{{ eintrag.titel }}</div>
+      <a class="titel" href="{{ details_url }}">{{ eintrag.titel }}</a>
       <div class="datum">
         <strong>{{ eintrag.start_lesbar }}</strong>
         {% if eintrag.jetzt_verfuegbar is defined %}
@@ -148,34 +180,6 @@
         {% endif %}
       </div>
       {% endif %}
-      <div class="karten-aktionen">
-        {# Merken/Entmerken gehoeren immer als Paar an die Karte: wer einen Titel
-           hier merken kann, muss ihn hier auch wieder loswerden koennen. #}
-        {% if gemerkt or (eintrag.tmdb_id, eintrag.medientyp) in gemerkt_ids %}
-        <form class="ausblenden-formular" method="post" action="{{ url_for('entmerken') }}">
-          <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
-          <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
-          <button type="submit">⭐ Nicht mehr merken</button>
-        </form>
-        {% else %}
-        <form class="ausblenden-formular" method="post" action="{{ url_for('merken') }}">
-          <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
-          <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
-          <input type="hidden" name="titel" value="{{ eintrag.titel }}">
-          <button type="submit">⭐ Merken</button>
-        </form>
-        {% endif %}
-        {% if not gemerkt %}
-        <form class="ausblenden-formular" method="post" action="{{ url_for('ausblenden') }}">
-          <input type="hidden" name="tmdb_id" value="{{ eintrag.tmdb_id }}">
-          <input type="hidden" name="medientyp" value="{{ eintrag.medientyp }}">
-          <input type="hidden" name="titel" value="{{ eintrag.titel }}">
-          <button type="submit">Ausblenden</button>
-        </form>
-        {% endif %}
-        <a class="knopf knopf-trailer" href="{{ eintrag.trailer_url }}" target="_blank" rel="noopener">▶ Trailer</a>
-        <a class="knopf knopf-trailer" href="{{ url_for('details', medientyp=eintrag.medientyp, tmdb_id=eintrag.tmdb_id) }}">ℹ Details</a>
-      </div>
     </div>
   </article>
   {% endmacro %}

@@ -43,6 +43,36 @@
         {% for genre in daten.genres %}<span class="badge" style="background:#6b7280">{{ genre }}</span>{% endfor %}
       </div>
 
+      <div class="details-aktionen">
+        <a class="knopf primaer" href="{{ daten.trailer_url }}" target="_blank" rel="noopener">▶ Trailer</a>
+        {% if gemerkt %}
+        <form method="post" action="{{ url_for('entmerken') }}">
+          <input type="hidden" name="tmdb_id" value="{{ tmdb_id }}">
+          <input type="hidden" name="medientyp" value="{{ medientyp }}">
+          <input type="hidden" name="weiter" value="{{ hier }}">
+          <button type="submit"><span class="stern-gemerkt">★</span> Nicht mehr merken</button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('merken') }}">
+          <input type="hidden" name="tmdb_id" value="{{ tmdb_id }}">
+          <input type="hidden" name="medientyp" value="{{ medientyp }}">
+          <input type="hidden" name="titel" value="{{ daten.titel }}">
+          <input type="hidden" name="weiter" value="{{ hier }}">
+          <button type="submit">☆ Merken</button>
+        </form>
+        {% endif %}
+        {% if ausgeblendet %}
+        <span class="leer-hinweis">Ausgeblendet &ndash; wieder einblenden in den <a href="{{ url_for('einstellungen_seite') }}">Einstellungen</a></span>
+        {% elif not gemerkt %}
+        <form method="post" action="{{ url_for('ausblenden') }}">
+          <input type="hidden" name="tmdb_id" value="{{ tmdb_id }}">
+          <input type="hidden" name="medientyp" value="{{ medientyp }}">
+          <input type="hidden" name="titel" value="{{ daten.titel }}">
+          <button type="submit">✕ Ausblenden</button>
+        </form>
+        {% endif %}
+      </div>
+
       {% if daten.overview %}
       <p>{{ daten.overview }}</p>
       {% else %}

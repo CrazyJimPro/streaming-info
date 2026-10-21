@@ -21,7 +21,7 @@ import time
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlsplit
 
 PROJEKT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJEKT_ROOT) not in sys.path:
@@ -264,7 +264,6 @@ def _starts_aufbereiten(zeilen: list[dict], anbieter_karte: dict[str, dict], heu
         eintrag["poster_url"] = _poster_url(eintrag.get("poster_pfad"))
         eintrag["start_lesbar"] = _datum_lesbar(eintrag.get("startdatum"))
         eintrag["countdown"] = _countdown_text(tage)
-        eintrag["trailer_url"] = _trailer_url(eintrag["titel"])
         erstmals = eintrag.get("erstmals_gesehen_am")
         eintrag["neu"] = bool(_neu_seit and erstmals and erstmals > _neu_seit)
         # Staffelstarts brauchen den Zusatz, sonst sieht die Kachel aus wie
@@ -295,6 +294,24 @@ def _trailer_url(titel: str) -> str:
     return f"https://www.youtube.com/@{TRAILER_KANAL}/search?query={query}"
 
 
+def _lokales_ziel(ziel: str | None) -> str | None:
+    """Ein Ruecksprungziel aus Formular oder Referer, aber nur innerhalb der
+    App: volle URLs werden auf Pfad+Query gekuerzt, wenn sie auf diese App
+    zeigen, alles andere (fremder Host, "//host", "javascript:") wird
+    verworfen - sonst liesse sich ein Knopf zur Weiterleitung nach aussen
+    missbrauchen."""
+    if not ziel:
+        return None
+    teile = urlsplit(ziel)
+    if teile.scheme or teile.netloc:
+        if teile.scheme not in ("http", "https") or teile.netloc != request.host:
+            return None
+    pfad = teile.path or "/"
+    if not pfad.startswith("/") or pfad.startswith("//") or "\\" in pfad:
+        return None
+    return pfad + (f"?{teile.query}" if teile.query else "")
+
+
 def _schnellfilter_quellen(
     aktive: list[str], anbieter_karte: dict[str, dict], abschnitte: list[list[dict]]
 ) -> list[dict]:
@@ -323,7 +340,6 @@ def _merkliste_aufbereiten(zeilen: list[dict], heute: date) -> list[dict]:
     for eintrag in zeilen:
         eintrag["poster_url"] = _poster_url(eintrag.get("poster_pfad"))
         eintrag["anbieter_liste"] = []
-        eintrag["trailer_url"] = _trailer_url(eintrag["titel"])
         datum = eintrag.get("startdatum")
         if datum:
             eintrag["start_lesbar"] = _datum_lesbar(datum)
@@ -705,6 +721,8 @@ def suche():
 def details(medientyp, tmdb_id):
     """Detailansicht zu einem einzelnen Titel - wie die Suche live von TMDB
     geholt, nichts davon landet in der Datenbank (siehe hole_details)."""
+    if medientyp not in ("film", "serie"):
+        return redirect(url_for("index"))
     api_key = lade_api_schluessel()
     daten = None
     fehler = None
@@ -714,10 +732,34 @@ def details(medientyp, tmdb_id):
         try:
             daten = hole_details(neue_session(), api_key, medientyp, tmdb_id)
             daten["poster_url"] = _poster_url(daten.get("poster_pfad"))
+            daten["trailer_url"] = _trailer_url(daten["titel"] or "")
         except TmdbFehler as exc:
             fehler = f"Die Details ließen sich gerade nicht abrufen: {exc}"
-    zurueck = request.referrer or url_for("index")
-    return render_template("details.html", daten=daten, fehler=fehler, zurueck=zurueck)
+    # Der Zurueck-Knopf soll auch nach Merken/Entmerken auf dieser Seite noch
+    # zur Uebersicht bzw. Suche fuehren - ein Formular-Ruecksprung hierher
+    # macht die Detailseite selbst zum Referer. Deshalb reist das urspruengliche
+    # Ziel als ?zurueck= mit und hat Vorrang.
+    zurueck = _lokales_ziel(request.args.get("zurueck")) or _lokales_ziel(request.referrer)
+    if not zurueck or zurueck.startswith("/details/"):
+        zurueck = url_for("index")
+    einstellungen = lade_einstellungen()
+    gemerkt = any(
+        e["tmdb_id"] == tmdb_id and e["medientyp"] == medientyp for e in einstellungen.get("merkliste", [])
+    )
+    ausgeblendet = any(
+        e["tmdb_id"] == tmdb_id and e["medientyp"] == medientyp for e in einstellungen.get("ausgeblendet", [])
+    )
+    return render_template(
+        "details.html",
+        daten=daten,
+        fehler=fehler,
+        zurueck=zurueck,
+        medientyp=medientyp,
+        tmdb_id=tmdb_id,
+        gemerkt=gemerkt,
+        ausgeblendet=ausgeblendet,
+        hier=url_for("details", medientyp=medientyp, tmdb_id=tmdb_id, zurueck=zurueck),
+    )
 
 
 @app.route("/merken", methods=["POST"])
@@ -732,7 +774,10 @@ def merken():
         return redirect(url_for("index"))
     medientyp = request.form.get("medientyp")
     suchtext = request.form.get("q", "")
-    zurueck = url_for("suche", q=suchtext) if suchtext else url_for("index")
+    zurueck = (
+        _lokales_ziel(request.form.get("weiter"))
+        or (url_for("suche", q=suchtext) if suchtext else url_for("index"))
+    )
     if medientyp not in ("film", "serie"):
         return redirect(zurueck)
     daten = lade_einstellungen()
@@ -766,19 +811,25 @@ def entmerken():
         daten["merkliste"] = behalten
         speichere_einstellungen(daten)
     suchtext = request.form.get("q")
-    return redirect(url_for("suche", q=suchtext) if suchtext else url_for("index"))
+    weiter = _lokales_ziel(request.form.get("weiter"))
+    return redirect(weiter or (url_for("suche", q=suchtext) if suchtext else url_for("index")))
 
 
 @app.route("/ausblenden", methods=["POST"])
 def ausblenden():
     """Blendet einen einzelnen Titel direkt aus der Uebersicht aus (Knopf an
-    jeder Karte) - ohne Umweg ueber die Einstellungsseite."""
+    jeder Karte und auf der Detailseite) - ohne Umweg ueber die
+    Einstellungsseite. Danach geht es immer zur Startseite, auch von der
+    Detailseite aus: dort waere der Titel ja gerade verschwunden."""
+    try:
+        tmdb_id = int(request.form["tmdb_id"])
+    except (KeyError, ValueError):
+        return redirect(url_for("index"))
+    medientyp = request.form.get("medientyp")
+    if medientyp not in ("film", "serie"):
+        return redirect(url_for("index"))
     daten = lade_einstellungen()
-    eintrag = {
-        "tmdb_id": int(request.form["tmdb_id"]),
-        "medientyp": request.form["medientyp"],
-        "titel": request.form.get("titel", ""),
-    }
+    eintrag = {"tmdb_id": tmdb_id, "medientyp": medientyp, "titel": request.form.get("titel", "")}
     if not any(e["tmdb_id"] == eintrag["tmdb_id"] and e["medientyp"] == eintrag["medientyp"] for e in daten.get("ausgeblendet", [])):
         daten.setdefault("ausgeblendet", []).append(eintrag)
         speichere_einstellungen(daten)

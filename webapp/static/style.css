@@ -112,7 +112,12 @@
 
 * { box-sizing: border-box; }
 
+/* Ohne Mindesthoehe endet der Verlaufshintergrund auf kurzen Seiten (Details,
+   leere Suche) mitten im Fenster und beginnt darunter von vorn. */
+html { min-height: 100%; }
+
 body {
+  min-height: 100vh;
   margin: 0;
   font-family: 'Manrope', -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   background: var(--page-bg);
@@ -364,31 +369,61 @@ section.abschnitt h2 {
   white-space: nowrap;
 }
 
+/* Zwei kleine Rundknoepfe (Merken, Ausblenden) oben rechts auf dem Poster.
+   Dunkles Glas in beiden Themes, weil sie immer auf einem Bild liegen. */
 .karte .karten-aktionen {
-  margin-top: auto;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
   display: flex;
-  flex-direction: column;
   gap: 0.3rem;
+  z-index: 2;
 }
 
-.karte .ausblenden-formular button {
-  width: 100%;
-  font-size: 0.72rem;
-  padding: 0.35rem;
-  opacity: 0.7;
-}
+.karte .karten-aktionen form { margin: 0; }
 
-.karte .ausblenden-formular button:hover { opacity: 1; }
-
-.karte .knopf-trailer {
-  width: 100%;
-  font-size: 0.72rem;
-  padding: 0.35rem;
-  text-align: center;
+.icon-knopf {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+  color: #fff;
+  background: rgba(11,16,32,0.55);
+  border: 1px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   opacity: 0.85;
 }
 
-.karte .knopf-trailer:hover { opacity: 1; }
+.icon-knopf:hover, .icon-knopf:focus-visible { opacity: 1; background: rgba(11,16,32,0.8); }
+.icon-knopf:focus-visible { outline: 2px solid #a855f7; outline-offset: 2px; }
+.icon-knopf.gemerkt, .stern-gemerkt { color: #f59e0b; }
+
+.karte .poster-link { display: block; }
+
+.karte a.titel {
+  color: inherit;
+  text-decoration: none;
+}
+
+.karte a.titel:hover, .karte a.titel:focus-visible { text-decoration: underline; }
+
+/* Ganze Karte reagiert auf Hover, damit sichtbar ist, dass sie klickbar ist. */
+.karte { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.karte:hover { transform: translateY(-2px); }
+
+.details-aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.details-aktionen form { margin: 0; }
 
 .karte .jetzt-verfuegbar {
   margin-top: 0.3rem;
