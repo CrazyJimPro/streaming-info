@@ -79,6 +79,51 @@
     <button class="primaer" type="submit">Suchen</button>
   </form>
 
+  {# Highlights der Woche: die meisterwarteten Starts der naechsten 7 Tage
+     (Auswahl in app.py:_highlights). Unabhaengig von Ansicht und Schnellfilter.
+     Ohne passende Titel - oder vor dem ersten Scan nach dem Update - entfaellt
+     es ganz. Blaettern per highlights.js. #}
+  {% if highlights %}
+  <section class="highlights" id="highlights" aria-roledescription="Karussell" aria-label="Highlights der Woche">
+    {% for h in highlights %}
+    <div class="highlight-folie" role="group" aria-roledescription="Folie"
+         aria-label="{{ loop.index }} von {{ loop.length }}" {{ '' if loop.first else 'hidden' }}>
+      <a class="highlight-link" href="{{ url_for('details', medientyp=h.medientyp, tmdb_id=h.tmdb_id) }}">
+        {% if h.bild_url %}
+        <img class="highlight-bild" src="{{ h.bild_url }}" alt="" {{ '' if loop.first else 'loading=lazy' }}>
+        {% endif %}
+        <div class="highlight-text">
+          <span class="highlight-kicker">✨ Highlight der Woche{% if loop.length > 1 %} &middot; {{ loop.index }}/{{ loop.length }}{% endif %}</span>
+          <span class="highlight-titel">{{ h.titel }}</span>
+          <span class="highlight-datum">
+            <strong>{{ h.start_lesbar }}</strong>
+            {% if h.countdown %}<span class="countdown">{{ h.countdown }}</span>{% endif %}
+            {% if h.zusatz %}&middot; {{ h.zusatz }}{% endif %}
+          </span>
+          <span class="badges">
+            {% if h.feste_farbe %}
+            <span class="badge" style="background:{{ h.feste_farbe }}">{{ h.festes_label }}</span>
+            {% else %}
+              {% for a in h.anbieter_liste %}<span class="badge" style="background:{{ a.farbe }}">{{ a.name }}</span>{% endfor %}
+            {% endif %}
+          </span>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+    {% if highlights | length > 1 %}
+    <button type="button" class="highlight-pfeil zurueck" data-richtung="-1" aria-label="Vorheriges Highlight">‹</button>
+    <button type="button" class="highlight-pfeil weiter" data-richtung="1" aria-label="Nächstes Highlight">›</button>
+    <div class="highlight-punkte">
+      {% for h in highlights %}
+      <button type="button" class="highlight-punkt" data-ziel="{{ loop.index0 }}"
+              aria-label="Highlight {{ loop.index }}: {{ h.titel }}" aria-current="{{ 'true' if loop.first else 'false' }}"></button>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
   {# Schnellfilter: reine Ansicht im Browser, kein neuer Abruf und keine
      Aenderung an den Einstellungen. Beim naechsten Oeffnen ist wieder alles da. #}
   <div class="schnellfilter" id="schnellfilter">
@@ -318,6 +363,7 @@
     })();
   </script>
   <script src="{{ url_for('static', filename='ansicht.js') }}"></script>
+  <script src="{{ url_for('static', filename='highlights.js') }}"></script>
   <script src="{{ url_for('static', filename='schnellfilter.js') }}"></script>
   <script src="{{ url_for('static', filename='scrollposition.js') }}"></script>
   <script>

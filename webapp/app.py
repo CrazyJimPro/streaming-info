@@ -53,7 +53,15 @@ from scraper.storage import (  # noqa: E402
     hole_vorkommende_sprachen,
     init_db,
 )
-from scraper.tmdb import hole_details, hole_verfuegbarkeit_mehrere, suche_titel, suche_verfuegbarkeit  # noqa: E402
+from scraper.tmdb import (  # noqa: E402
+    MIN_POPULARITAET_DIGITAL,
+    MIN_POPULARITAET_KINO,
+    MIN_POPULARITAET_SERIE,
+    hole_details,
+    hole_verfuegbarkeit_mehrere,
+    suche_titel,
+    suche_verfuegbarkeit,
+)
 
 app = Flask(__name__)
 
@@ -434,6 +442,50 @@ def _abschnitte_laden(einstellungen: dict, anbieter_karte: dict, heute: date) ->
     return streaming, kino, digital, bis
 
 
+TMDB_BACKDROP_BASIS = "https://image.tmdb.org/t/p/w1280"
+HIGHLIGHT_TAGE = 7
+HIGHLIGHT_ANZAHL = 5
+
+# TMDB fuehrt Serien und Filme auf verschiedenen Popularitaets-Skalen (siehe
+# die Schwellen in scraper/tmdb.py) - verglichen wird deshalb das Vielfache der
+# jeweiligen Schwelle, sonst gewaennen Kinofilme fast immer.
+_HIGHLIGHT_SKALA = {
+    "serie": MIN_POPULARITAET_SERIE,
+    "staffel": MIN_POPULARITAET_SERIE,
+    "kino": MIN_POPULARITAET_KINO,
+    "digital": MIN_POPULARITAET_DIGITAL,
+}
+
+
+def _highlights(streaming: list[dict], kino: list[dict], digital: list[dict], heute: date) -> list[dict]:
+    """Die meisterwarteten Starts der naechsten 7 Tage fuer das Banner oben.
+    Gefiltert wie die Uebersicht (die Listen kommen aus _abschnitte_laden),
+    ohne Popularitaet (alte DB vor dem ersten Scan) faellt ein Titel raus."""
+    bis = (heute + timedelta(days=HIGHLIGHT_TAGE)).isoformat()
+    kandidaten = []
+    for eintrag in streaming + kino + digital:
+        popularitaet = eintrag.get("popularitaet")
+        skala = _HIGHLIGHT_SKALA.get(eintrag.get("art"))
+        if not popularitaet or not skala or eintrag["startdatum"] > bis:
+            continue
+        kandidaten.append((popularitaet / skala, eintrag))
+    kandidaten.sort(key=lambda paar: paar[0], reverse=True)
+
+    ergebnis = []
+    gesehen = set()
+    for _, eintrag in kandidaten:
+        # Derselbe Film kann als Kino- und Digitalstart in der Woche liegen.
+        schluessel = (eintrag["tmdb_id"], eintrag["medientyp"])
+        if schluessel in gesehen:
+            continue
+        gesehen.add(schluessel)
+        pfad = eintrag.get("backdrop_pfad")
+        ergebnis.append({**eintrag, "bild_url": f"{TMDB_BACKDROP_BASIS}{pfad}" if pfad else eintrag.get("poster_url")})
+        if len(ergebnis) == HIGHLIGHT_ANZAHL:
+            break
+    return ergebnis
+
+
 def _zeitleiste(streaming: list[dict], kino: list[dict], digital: list[dict], heute: date) -> list[dict]:
     """Alle drei Bereiche gemischt und nach Kalenderwoche (Mo-So) gruppiert -
     fuer die Ansicht "Nach Woche". Innerhalb einer Woche nach Datum, bei
@@ -548,6 +600,7 @@ def index():
         api_schluessel_fehlt=api_schluessel_fehlt,
         einrichtung_offen=einrichtung_offen,
         zeitleiste=_zeitleiste(streaming, kino, digital, heute),
+        highlights=_highlights(streaming, kino, digital, heute),
     )
 
 

@@ -80,6 +80,8 @@ def _zu_titel_eintrag(rohdaten: dict, medientyp: str) -> TitelEintrag:
         erscheinungsdatum=rohdaten.get("release_date") or rohdaten.get("first_air_date") or None,
         genre_ids=rohdaten.get("genre_ids", []),
         originalsprache=rohdaten.get("original_language") or None,
+        popularitaet=rohdaten.get("popularity"),
+        backdrop_pfad=rohdaten.get("backdrop_path") or None,
     )
 
 

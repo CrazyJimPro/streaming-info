@@ -23,6 +23,10 @@ class TitelEintrag:
     genre_ids: list[int]
     kinostart_de: str | None = None
     originalsprache: str | None = None  # ISO-639-1, z.B. "de", "en", "ko"
+    # Fuer "Highlights der Woche": wie erwartet ein Titel ist (TMDB fuehrt
+    # popularity auch fuer Unveroeffentlichtes) und ein breites Szenenbild.
+    popularitaet: float | None = None
+    backdrop_pfad: str | None = None
 
 
 @dataclass

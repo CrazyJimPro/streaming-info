@@ -26,6 +26,7 @@ keine geplante Aufgabe, kein Cronjob.
 | es täglich benutzen | [Starten und beenden](#starten-und-beenden) |
 | auf der Startseite nur Netflix, nur Filme o. Ä. sehen | [Schnellfilter](#schnellfilter-nur-bestimmte-anbieter-oder-nur-filme) |
 | sehen, was diese und nächste Woche startet – egal wo | [Ansicht nach Woche](#ansicht-nach-woche) |
+| auf einen Blick die großen Starts der Woche sehen | [Highlights der Woche](#highlights-der-woche) |
 | mir vorab einen Trailer ansehen | [Trailer ansehen](#trailer-ansehen) |
 | mehr zu einem Titel erfahren (Beschreibung, Darsteller, FSK) | [Detailansicht](#detailansicht) |
 | sehen, ob ein gemerkter Titel schon läuft | ["Jetzt verfügbar" in der Merkliste](#jetzt-verfügbar-in-der-merkliste) |
@@ -215,6 +216,29 @@ Anders als der Schnellfilter **merkt sich die App die gewählte Ansicht**:
 Wer einmal „Nach Woche" gewählt hat, bekommt sie auch beim nächsten Öffnen.
 Gespeichert wird das im Browser. Auf einem anderen Rechner oder in einem
 anderen Browser beginnt die Seite wieder mit „Nach Bereich".
+
+---
+
+# Highlights der Woche
+
+Oben auf der Startseite, unter dem Suchfeld, zeigt ein großes Banner mit
+Szenenbild die **meisterwarteten Starts der nächsten 7 Tage**, bis zu fünf
+Stück. Gemessen wird an der Beliebtheit bei TMDB. Serien und Filme werden
+dabei getrennt gewichtet, weil TMDB sie unterschiedlich zählt.
+
+- **Blättern:** mit den Pfeilen **‹ ›** links und rechts, mit den Punkten
+  unten rechts oder mit den Pfeiltasten der Tastatur. Auf dem Handy einfach
+  **wischen**.
+- **Klick aufs Bild** öffnet die [Detailansicht](#detailansicht).
+- Es gelten dieselben Einstellungen wie für die Übersicht (Anbieter, Genres,
+  Sprachen, ausgeblendete Titel). Der Schnellfilter und die Ansicht spielen
+  keine Rolle.
+- Startet in den nächsten 7 Tagen nichts, gibt es auch kein Banner.
+
+**Direkt nach dem Update auf v1.6.0** fehlt das Banner einen Moment: Die
+App muss sich Beliebtheit und Szenenbild erst beim nächsten Abruf holen. Der
+läuft beim Start automatisch und dauert nur ein paar Sekunden. Danach einmal
+die Seite neu laden.
 
 ---
 

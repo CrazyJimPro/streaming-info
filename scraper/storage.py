@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS titel (
     kinostart_de TEXT,
     originalsprache TEXT,
     aktualisiert_am TEXT NOT NULL,
+    popularitaet REAL,
+    backdrop_pfad TEXT,
     PRIMARY KEY (tmdb_id, medientyp)
 );
 
@@ -80,6 +82,12 @@ def init_db(db_pfad: Path = DB_PFAD) -> None:
         spalten = {row["name"] for row in conn.execute("PRAGMA table_info(titel)")}
         if "originalsprache" not in spalten:
             conn.execute("ALTER TABLE titel ADD COLUMN originalsprache TEXT")
+        # Fuer "Highlights der Woche" (ab v1.6.0). Bis zum naechsten Scan leer -
+        # solche Titel kommen dann einfach nicht ins Highlight-Banner.
+        if "popularitaet" not in spalten:
+            conn.execute("ALTER TABLE titel ADD COLUMN popularitaet REAL")
+        if "backdrop_pfad" not in spalten:
+            conn.execute("ALTER TABLE titel ADD COLUMN backdrop_pfad TEXT")
         # Fuer "Neu seit letztem Besuch" (ab v0.13.0): Zeilen von vor diesem
         # Feld bekommen gesehen_am als Ersatzwert, statt beim naechsten Besuch
         # geschlossen als "neu" aufzuleuchten.
@@ -94,8 +102,8 @@ def speichere_titel(eintraege: list[TitelEintrag], db_pfad: Path = DB_PFAD) -> N
     with closing(_verbindung(db_pfad)) as conn, conn:
         conn.executemany(
             """
-            INSERT INTO titel (tmdb_id, medientyp, titel, overview, poster_pfad, erscheinungsdatum, genre_ids, kinostart_de, originalsprache, aktualisiert_am)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO titel (tmdb_id, medientyp, titel, overview, poster_pfad, erscheinungsdatum, genre_ids, kinostart_de, originalsprache, aktualisiert_am, popularitaet, backdrop_pfad)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(tmdb_id, medientyp) DO UPDATE SET
                 titel = excluded.titel,
                 overview = excluded.overview,
@@ -104,7 +112,9 @@ def speichere_titel(eintraege: list[TitelEintrag], db_pfad: Path = DB_PFAD) -> N
                 genre_ids = excluded.genre_ids,
                 kinostart_de = COALESCE(excluded.kinostart_de, kinostart_de),
                 originalsprache = COALESCE(excluded.originalsprache, originalsprache),
-                aktualisiert_am = excluded.aktualisiert_am
+                aktualisiert_am = excluded.aktualisiert_am,
+                popularitaet = COALESCE(excluded.popularitaet, popularitaet),
+                backdrop_pfad = COALESCE(excluded.backdrop_pfad, backdrop_pfad)
             """,
             [
                 (
@@ -118,6 +128,8 @@ def speichere_titel(eintraege: list[TitelEintrag], db_pfad: Path = DB_PFAD) -> N
                     e.kinostart_de,
                     e.originalsprache,
                     jetzt,
+                    e.popularitaet,
+                    e.backdrop_pfad,
                 )
                 for e in eintraege
             ],
