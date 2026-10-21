@@ -53,8 +53,7 @@
     <div class="kopf-aktionen">
       <button id="theme-toggle" type="button"></button>
       <a class="knopf" href="{{ url_for('einstellungen_seite') }}">Einstellungen</a>
-      <form method="post" action="{{ url_for('beenden') }}" style="display:inline"
-            onsubmit="return confirm('Streaming-Info wirklich beenden?');">
+      <form method="post" action="{{ url_for('beenden') }}" style="display:inline" id="beenden-formular">
         <button type="submit">Beenden</button>
       </form>
     </div>
@@ -339,6 +338,53 @@
   </div>
 
   <button type="button" class="nach-oben" id="nach-oben" title="Nach oben" aria-label="Nach oben" tabindex="-1" aria-hidden="true">↑</button>
+
+  {# Ersetzt nach "Beenden" die ganze Seite, falls der Browser das Schliessen
+     des Tabs verweigert. Steht fertig gestaltet im Dokument, weil danach kein
+     Server mehr da ist, der eine neue Seite oder auch nur das Stylesheet
+     liefern koennte. #}
+  <div class="beendet-hinweis" id="beendet-hinweis" role="status" hidden>
+    <h1>Streaming-Info ist beendet</h1>
+    <p>Es läuft jetzt nichts mehr im Hintergrund.</p>
+    <p class="beendet-taste">Diesen Tab schließen: <kbd>Strg</kbd> + <kbd>W</kbd></p>
+    <p class="hinweis">
+      Zum erneuten Starten einfach wieder auf die Desktop-Verknüpfung
+      <strong>„Streaming-Info"</strong> klicken &mdash; dabei werden die Daten
+      automatisch neu geholt.
+    </p>
+  </div>
+
+  <script>
+    // Beenden: per Hintergrund-Anfrage statt Formular, damit die Seite nicht
+    // neu geladen wird - jede Navigation verlaengert die Tab-Historie, und
+    // Browser erlauben window.close() nur bei einem Tab ohne Vorgeschichte
+    // (oder einem per Skript geoeffneten). Klappt das Schliessen nicht, steht
+    // statt der Uebersicht der Hinweis mit Strg+W da.
+    (function () {
+      var formular = document.getElementById("beenden-formular");
+      var hinweis = document.getElementById("beendet-hinweis");
+      formular.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (!confirm("Streaming-Info wirklich beenden?")) return;
+        fetch(formular.action, { method: "POST" })
+          .then(function (antwort) {
+            if (!antwort.ok) throw new Error("HTTP " + antwort.status);
+            window.close();
+            // Ist der Tab noch da, hat der Browser das Schliessen verweigert.
+            setTimeout(function () {
+              document.title = "Streaming-Info beendet";
+              document.body.classList.add("app-beendet");
+              hinweis.hidden = false;
+              window.scrollTo(0, 0);
+            }, 300);
+          })
+          .catch(function () {
+            // Anfrage gescheitert: der alte Weg ueber das Formular.
+            formular.submit();
+          });
+      });
+    })();
+  </script>
 
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
   <script>

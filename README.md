@@ -144,9 +144,16 @@ Bei jedem Start passiert automatisch:
 Läuft die App schon, startet ein erneuter Klick nichts doppelt — er frischt
 nur die Daten auf und holt das Browserfenster zurück.
 
-**Beenden:** Oben auf der Seite den Knopf **„Beenden"** anklicken. Erst dann
-läuft nichts mehr im Hintergrund. Nur das Browserfenster zu schließen genügt
-**nicht** — die App läuft dann weiter.
+**Beenden:** Oben auf der Seite den Knopf **„Beenden"** anklicken und
+bestätigen. Erst dann läuft nichts mehr im Hintergrund. Nur das
+Browserfenster zu schließen genügt **nicht** — die App läuft dann weiter.
+
+Danach versucht die App, ihren Tab selbst zu schließen. Das erlauben Browser
+aber nur, wenn im Tab vorher noch nichts angeklickt wurde. Hast du dir schon
+Details angesehen oder etwas gemerkt, bleibt der Tab offen und zeigt
+**„Streaming-Info ist beendet"**. Dann schließt du ihn mit **Strg + W**.
+Den ganzen Browser kann keine Webseite schließen. Das ist eine
+Sicherheitsregel der Browser, keine Einschränkung der App.
 
 **Welche Version läuft?** Oben in der Kopfzeile steht ein kleines Abzeichen,
 z.B. `v0.4.1`.

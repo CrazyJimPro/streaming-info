@@ -1066,3 +1066,39 @@ body:has(.rueckgaengig-leiste) .nach-oben { bottom: 6rem; }
   .highlights:has(.highlight-punkte) .highlight-text { padding-left: 1rem; padding-right: 1rem; padding-bottom: 2.2rem; }
   .highlight-punkte { right: 1rem; bottom: 0.9rem; }
 }
+
+/* Nach "Beenden", wenn der Browser das Schliessen des Tabs verweigert: nur
+   noch der Hinweis, alles andere verschwindet (die Seite funktioniert ohne
+   Server ohnehin nicht mehr). */
+body.app-beendet > *:not(#beendet-hinweis) { display: none !important; }
+
+.beendet-hinweis[hidden] { display: none; }
+
+.beendet-hinweis {
+  max-width: 34rem;
+  margin: 12vh auto 0;
+  padding: 2rem 2.2rem;
+  text-align: center;
+  background: var(--card-bg);
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
+  border: 1px solid var(--card-border);
+  border-radius: 22px;
+  box-shadow: var(--card-shadow);
+}
+
+.beendet-hinweis h1 { margin: 0 0 0.6rem; font-size: 1.6rem; font-weight: 800; }
+
+.beendet-taste { font-size: 1.1rem; font-weight: 700; margin: 1.4rem 0; }
+
+kbd {
+  display: inline-block;
+  min-width: 2.2em;
+  padding: 0.2em 0.55em;
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  border-bottom-width: 3px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 0.95em;
+}
