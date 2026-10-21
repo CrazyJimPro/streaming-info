@@ -149,7 +149,7 @@ header h1 {
 
 .subtitle {
   color: var(--muted);
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
 }
 
 .version {
@@ -159,9 +159,44 @@ header h1 {
 
 .kopf-aktionen {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 }
+
+/* "Stand: vor 3 Stunden  ↻  ⚠ Fehler bei ..." unter dem Untertitel */
+.stand-zeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stand-zeile form { margin: 0; }
+
+.aktualisieren-knopf {
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.aktualisieren-knopf:disabled { opacity: 0.4; cursor: default; }
+
+.kalender-adresse {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.kalender-adresse input { flex: 1 1 16rem; }
 
 button, .knopf {
   font: inherit;
@@ -191,22 +226,6 @@ button.primaer, .knopf.primaer {
   border-radius: 999px;
 }
 
-.quellen-status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1rem 0 1.5rem 0;
-}
-
-.status-chip {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  border: 1px solid var(--surface-border);
-  background: var(--surface);
-}
-
-.status-ok { color: var(--status-ok); }
 .status-fehler { color: var(--status-fehler); }
 
 .scan-hinweis {

@@ -22,14 +22,31 @@
         Was in den nächsten {{ zeitraum_wochen }} Wochen startet &mdash; bis {{ bis.strftime('%d.%m.%Y') }}
         <span class="version" title="Installierte Version">&middot; v{{ version }}</span>
       </p>
+      {# Eine Zeile statt eines Chips je Quelle: wie frisch die Daten sind,
+         ob irgendwo etwas schiefging, und der Knopf zum Neuholen. #}
+      <div class="stand-zeile">
+        {% if scan.laeuft %}
+          <span>Wird gerade aktualisiert &ndash; die Seite lädt sich gleich von selbst neu.</span>
+        {% elif stand.alter_text %}
+          <span title="Ältester Abruf der aktiven Quellen: {{ stand.zeitpunkt }}">Stand: {{ stand.alter_text }}</span>
+          {% if stand.veraltet %}<strong class="status-fehler">(veraltet)</strong>{% endif %}
+        {% else %}
+          <span>Noch keine Daten abgerufen.</span>
+        {% endif %}
+        <form method="post" action="{{ url_for('aktualisieren') }}">
+          <button class="aktualisieren-knopf" type="submit" title="Jetzt aktualisieren" aria-label="Jetzt aktualisieren"
+                  {{ 'disabled' if scan.laeuft else '' }}>↻</button>
+        </form>
+        {% if stand.fehler %}
+          <span class="status-fehler" title="{% for f in stand.fehler %}{{ f.name }}: {{ f.text }}{{ '&#10;' | safe if not loop.last }}{% endfor %}">
+            ⚠ Fehler bei {{ stand.fehler | map(attribute='name') | join(', ') }}
+          </span>
+        {% endif %}
+      </div>
     </div>
     <div class="kopf-aktionen">
       <button id="theme-toggle" type="button"></button>
       <a class="knopf" href="{{ url_for('einstellungen_seite') }}">Einstellungen</a>
-      <a class="knopf" href="{{ url_for('kalender') }}" title="Kalender als .ics herunterladen oder als Abo eintragen">📅 Kalender</a>
-      <form method="post" action="{{ url_for('aktualisieren') }}" style="display:inline">
-        <button class="primaer" type="submit" {{ 'disabled' if scan.laeuft else '' }}>Jetzt aktualisieren</button>
-      </form>
       <form method="post" action="{{ url_for('beenden') }}" style="display:inline"
             onsubmit="return confirm('Streaming-Info wirklich beenden?');">
         <button type="submit">Beenden</button>
@@ -97,19 +114,6 @@
   </div>
   {% endif %}
 
-  <div class="quellen-status">
-    {% for eintrag in status %}
-      <span class="status-chip {{ 'status-fehler' if eintrag.letzter_fehler and not eintrag.erfolg_text else ('status-ok' if eintrag.erfolg_text else '') }}">
-        {{ eintrag.quelle }}
-        {% if eintrag.erfolg_text %}&middot; {{ eintrag.alter_text }}{% if eintrag.veraltet %} (veraltet!){% endif %}{% endif %}
-        {% if eintrag.letzter_fehler and not eintrag.erfolg_text %}&middot; Fehler{% endif %}
-      </span>
-    {% endfor %}
-  </div>
-
-  <div id="scan-hinweis" class="scan-hinweis" style="display:{{ 'block' if scan.laeuft else 'none' }}">
-    Daten werden aktualisiert &mdash; das dauert nur ein paar Sekunden. Diese Seite lädt sich automatisch neu.
-  </div>
   {% if scan.fehler %}
   <div class="scan-hinweis fehler">Letzter Scan fehlgeschlagen: {{ scan.fehler }}</div>
   {% endif %}

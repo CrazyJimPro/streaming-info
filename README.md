@@ -149,6 +149,12 @@ läuft nichts mehr im Hintergrund. Nur das Browserfenster zu schließen genügt
 **Welche Version läuft?** Oben in der Kopfzeile steht ein kleines Abzeichen,
 z.B. `v0.4.1`.
 
+**Wie aktuell sind die Daten?** Unter dem Titel steht z.B. **„Stand: vor 3
+Stunden"**. Gemeint ist der älteste Abruf aller eingeschalteten Quellen, die
+genaue Uhrzeit zeigt der Tooltip. Der Knopf **↻** daneben holt alles neu. Ist
+ein Abruf schiefgegangen, steht dort zusätzlich **„⚠ Fehler bei …"** mit den
+betroffenen Anbietern.
+
 **Zugriff von einem anderen Rechner im Netzwerk:** Läuft die App z.B. in einer
 VM, erreichst du sie auch über `http://<IP-der-VM>:5100` von einem anderen
 Gerät im selben Netzwerk — nicht nur über `localhost` auf der VM selbst. Ohne
@@ -244,7 +250,7 @@ Karten in der Übersicht (Streaming, Kino, Digital), die seit deinem letzten
 
 - Die Markierung bezieht sich auf den **App-Start**, nicht auf das Neuladen
   der Seite: Innerhalb einer laufenden Sitzung bleibt sie gleich, auch bei
-  „Jetzt aktualisieren" oder mehreren Seitenaufrufen. Erst der nächste Start
+  einem Klick auf ↻ (Aktualisieren) oder mehreren Seitenaufrufen. Erst der nächste Start
   setzt sie zurück.
 - Die Merkliste hat keine „Neu"-Markierung — dort zeigt ein bereits
   gestarteter Titel stattdessen ["Jetzt verfügbar"](#jetzt-verfügbar-in-der-merkliste).
@@ -256,18 +262,28 @@ Karten in der Übersicht (Streaming, Kino, Digital), die seit deinem letzten
 
 # Kalender-Export (.ics)
 
-Oben auf der Startseite der Knopf **„📅 Kalender"** lädt eine `.ics`-Datei mit
-genau dem, was die Übersicht gerade zeigt: Streaming-, Kino- und
-Digital-Starts im eingestellten Zeitraum, nach Anbieter/Genre/Sprache
-gefiltert. Jeder Termin ist ein ganztägiger Eintrag mit Titel und Anbieter.
+Unter *Einstellungen → Kalender* lädt der Knopf **„📅 Als .ics-Datei
+herunterladen"** eine Datei mit genau dem, was die Übersicht gerade zeigt:
+Streaming-, Kino- und Digital-Starts im eingestellten Zeitraum, nach
+Anbieter/Genre/Sprache gefiltert. Jeder Termin ist ein ganztägiger Eintrag mit
+Titel und Anbieter.
 
 Die Datei lässt sich in jeden Kalender importieren (Outlook, Google
-Kalender, Apple Kalender, Thunderbird, …). Da die Adresse immer gleich
-bleibt, geht auch ein **Kalender-Abo**: Google Kalender → „Weiteren Kalender
-hinzufügen → Per URL", Apple Kalender → „Ablage → Neues Kalenderabo", jeweils
-mit der Adresse `http://<Rechner>:5100/kalender.ics`. Der Kalender holt sich
-dann von selbst den aktuellen Stand — **aber nur, solange die App läuft**
-(kein Dienst im Hintergrund, siehe oben).
+Kalender, Apple Kalender, Thunderbird, …).
+
+**Als Abo** aktualisiert sich der Kalender von selbst:
+
+1. *Einstellungen → Kalender*, dort bei der Adresse auf **Kopieren** klicken.
+2. Im Kalenderprogramm ein Abo per Adresse anlegen und die Adresse einfügen —
+   z.B. Thunderbird: „Neuer Kalender → Im Netzwerk", Outlook: „Kalender
+   hinzufügen → Aus dem Internet", Apple Kalender: „Ablage → Neues
+   Kalenderabonnement".
+
+Der Kalender holt sich dann von selbst den aktuellen Stand — **aber nur,
+solange die App läuft** (kein Dienst im Hintergrund, siehe oben).
+**Google Kalender geht als Abo nicht:** Google ruft die Adresse von seinen
+Servern im Internet ab und erreicht dein Heimnetz nicht. Dort nur die Datei
+importieren.
 
 Die Merkliste ist **nicht** enthalten — sie hat mit
 ["Jetzt verfügbar"](#jetzt-verfügbar-in-der-merkliste) schon eine eigene
@@ -540,9 +556,10 @@ erscheinen, falls noch ein Paket nachinstalliert werden muss. Wird ein
 - Ist der **Vorschau-Zeitraum** sehr kurz? Probiere 8 oder 10 Wochen.
 - Sind alle **Genres** abgewählt bis auf wenige? Kein Häkchen = alle.
 - Sind nur wenige **Originalsprachen** angehakt? Kein Häkchen = alle.
-- Steht bei den Anbietern oben ein **Fehler**-Abzeichen? Dann kam der Abruf
-  nicht durch — meist ein Netzwerkproblem, einmal „Jetzt aktualisieren"
-  drücken.
+- Steht oben unter dem Titel **„⚠ Fehler bei …"**? Dann kam der Abruf bei
+  diesen Anbietern nicht durch — meist ein Netzwerkproblem. Einmal auf **↻**
+  daneben klicken. Den genauen Fehler zeigt der Tooltip, wenn du mit der Maus
+  auf die Meldung zeigst.
 
 ### Ein gemerkter Titel taucht nicht auf
 

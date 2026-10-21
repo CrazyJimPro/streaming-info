@@ -177,27 +177,46 @@ def _alter_text(alter: timedelta) -> str:
     return "gerade eben"
 
 
-def _status_aufbereiten(status: list[dict]) -> list[dict]:
-    jetzt = datetime.now()
-    aufbereitet = []
-    for roh_eintrag in status:
-        eintrag = dict(roh_eintrag)
-        eintrag["erfolg_text"] = None
-        eintrag["alter_text"] = None
-        eintrag["veraltet"] = False
-        roh = eintrag.get("letzter_erfolg_am")
-        if roh:
-            try:
-                zeitpunkt = datetime.fromisoformat(str(roh))
-            except ValueError:
-                eintrag["erfolg_text"] = str(roh)
-            else:
-                eintrag["erfolg_text"] = zeitpunkt.strftime("%d.%m.%Y, %H:%M")
-                alter = jetzt - zeitpunkt
-                eintrag["veraltet"] = alter > timedelta(hours=VERALTET_AB_STUNDEN)
-                eintrag["alter_text"] = _alter_text(alter)
-        aufbereitet.append(eintrag)
-    return aufbereitet
+def _stand_zusammenfassen(status: list[dict], aktive: list[str], anbieter_karte: dict[str, dict]) -> dict:
+    """Eine Zeile "Stand: vor 3 Stunden" statt eines Chips je Quelle.
+
+    Massgeblich ist der AELTESTE Erfolg der gerade aktiven Quellen - so
+    behauptet die Zeile nie einen frischeren Stand, als die Daten haben.
+    Abgewaehlte Anbieter bleiben mit ihrer alten Zeit in quellen_status
+    liegen und zaehlen deshalb nicht mit.
+
+    Ein Fehler gilt nur als aktuell, wenn er juenger ist als der letzte Erfolg:
+    markiere_quelle_erfolg setzt den alten Fehlertext nicht zurueck."""
+    namen = {s: a["name"] for s, a in anbieter_karte.items()}
+    namen.update({"kino": "Kino", "digital": "Digital", "merkliste": "Merkliste"})
+    relevant = set(aktive) | {"kino", "digital", "merkliste"}
+
+    aeltester: datetime | None = None
+    fehler: list[dict] = []
+    for eintrag in status:
+        if eintrag["quelle"] not in relevant:
+            continue
+        erfolg = _iso_oder_none(eintrag.get("letzter_erfolg_am"))
+        fehler_am = _iso_oder_none(eintrag.get("letzter_fehler_am"))
+        if eintrag.get("letzter_fehler") and fehler_am and (erfolg is None or fehler_am > erfolg):
+            fehler.append({"name": namen.get(eintrag["quelle"], eintrag["quelle"]), "text": eintrag["letzter_fehler"]})
+        if erfolg and (aeltester is None or erfolg < aeltester):
+            aeltester = erfolg
+
+    stand = {"alter_text": None, "zeitpunkt": None, "veraltet": False, "fehler": fehler}
+    if aeltester:
+        alter = datetime.now() - aeltester
+        stand["alter_text"] = _alter_text(alter)
+        stand["zeitpunkt"] = aeltester.strftime("%d.%m.%Y, %H:%M")
+        stand["veraltet"] = alter > timedelta(hours=VERALTET_AB_STUNDEN)
+    return stand
+
+
+def _iso_oder_none(roh) -> datetime | None:
+    try:
+        return datetime.fromisoformat(str(roh)) if roh else None
+    except ValueError:
+        return None
 
 
 def _anbieter_karte() -> dict[str, dict]:
@@ -445,7 +464,9 @@ def index():
     api_key = lade_api_schluessel()
     _markiere_jetzt_verfuegbar(merkliste, api_key, heute)
 
-    status = _status_aufbereiten(hole_quellen_status(db_pfad=DB_PFAD))
+    stand = _stand_zusammenfassen(
+        hole_quellen_status(db_pfad=DB_PFAD), einstellungen.get("aktive_anbieter", []), anbieter_karte
+    )
     api_schluessel_fehlt = not api_key
 
     # Einmaliger Wegweiser nach einer frischen Installation - das Gegenstueck
@@ -475,7 +496,7 @@ def index():
             einstellungen.get("aktive_anbieter", []), anbieter_karte, [streaming, kino, digital]
         ),
         gemerkt_ids={(m["tmdb_id"], m["medientyp"]) for m in einstellungen.get("merkliste", [])},
-        status=status,
+        stand=stand,
         heute=heute,
         bis=bis,
         zeitraum_wochen=zeitraum_wochen,
@@ -593,6 +614,7 @@ def einstellungen_seite():
 
     return render_template(
         "einstellungen.html",
+        kalender_url=url_for("kalender", _external=True),
         einstellungen=daten,
         anbieter=alle_anbieter,
         genres=sorted(genres.items(), key=lambda kv: kv[1]),

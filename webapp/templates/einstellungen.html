@@ -147,6 +147,26 @@
 
   <!-- Bewusst ausserhalb des Formulars oben: ein Knopf darin wuerde beim
        Anklicken das Einstellungsformular abschicken. -->
+  <div class="einstellungen-block" id="kalender">
+    <h2>Kalender</h2>
+    <p class="hinweis">
+      Alle Starts, die die Übersicht gerade zeigt (Zeitraum, Anbieter, Genres, Sprachen), als
+      ganztägige Termine &ndash; die Merkliste ist nicht dabei.
+    </p>
+    <a class="knopf" href="{{ url_for('kalender') }}">📅 Als .ics-Datei herunterladen</a>
+    <p class="feld-hinweis">
+      <strong>Oder als Abo eintragen</strong>, dann aktualisiert sich der Kalender von selbst &ndash;
+      aber nur, solange Streaming-Info läuft. Das klappt mit Kalenderprogrammen auf einem Rechner
+      im Heimnetz (Outlook, Thunderbird, Apple Kalender), <strong>nicht</strong> mit Google Kalender:
+      Google ruft die Adresse aus dem Internet ab und erreicht dein Heimnetz nicht.
+    </p>
+    <div class="kalender-adresse">
+      <input type="text" id="kalender-url" value="{{ kalender_url }}" readonly
+             aria-label="Abo-Adresse des Kalenders" onfocus="this.select()">
+      <button type="button" id="kalender-kopieren">Kopieren</button>
+    </div>
+  </div>
+
   <div class="einstellungen-block">
     <h2>Sicherung</h2>
     <p class="hinweis">

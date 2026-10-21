@@ -67,4 +67,30 @@
   });
 
   sucheEinrichten("merk-suche", "merk-ergebnisse", "merk-liste", "merk");
+
+  // Abo-Adresse des Kalenders kopieren. navigator.clipboard gibt es nur in
+  // "sicheren" Seiten (https oder localhost) - wer die App per Netzwerk-IP
+  // aufruft, bekommt deshalb den alten execCommand-Weg.
+  var kalenderFeld = document.getElementById("kalender-url");
+  var kopierKnopf = document.getElementById("kalender-kopieren");
+  if (kalenderFeld && kopierKnopf) {
+    kopierKnopf.addEventListener("click", function () {
+      function erledigt() {
+        kopierKnopf.textContent = "Kopiert ✓";
+        setTimeout(function () { kopierKnopf.textContent = "Kopieren"; }, 2000);
+      }
+      function altWeg() {
+        kalenderFeld.focus();
+        kalenderFeld.select();
+        try {
+          if (document.execCommand("copy")) erledigt();
+        } catch (e) {}
+      }
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(kalenderFeld.value).then(erledigt, altWeg);
+      } else {
+        altWeg();
+      }
+    });
+  }
 })();
