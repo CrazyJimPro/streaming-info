@@ -885,3 +885,58 @@ input[type="file"] {
   color: var(--fg);
   max-width: 30rem;
 }
+
+/* Pfeil "nach oben" unten rechts auf der Startseite (siehe nach-oben im
+   Template). Erscheint erst, wenn man ein Stueck heruntergescrollt hat. */
+.nach-oben {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 9;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  line-height: 1;
+  background: var(--toast-bg);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  opacity: 0;
+  transform: translateY(0.75rem);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.nach-oben.sichtbar { opacity: 1; transform: none; pointer-events: auto; }
+.nach-oben:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Liegt die Rueckgaengig-Leiste unten, rueckt der Pfeil darueber. */
+body:has(.rueckgaengig-leiste) .nach-oben { bottom: 6rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nach-oben { transition: none; }
+}
+
+/* Handy: zwei Karten nebeneinander statt einer 200px-Karte mit leerem Rest
+   daneben - in der Wochenansicht wurde die Seite sonst endlos lang. */
+@media (max-width: 560px) {
+  body { padding: 1rem; }
+  header { padding: 1rem 1.1rem; }
+
+  .karten-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .karte { border-radius: 16px; }
+  .karte .inhalt { padding: 0.5rem 0.55rem 0.65rem; gap: 0.3rem; }
+  .karte .titel { font-size: 0.82rem; }
+  .karte .datum { font-size: 0.72rem; }
+  .karte .karten-aktionen { top: 0.35rem; right: 0.35rem; }
+  .icon-knopf { width: 1.75rem; height: 1.75rem; font-size: 0.9rem; }
+
+  .nach-oben { right: 1rem; bottom: 1rem; }
+  body:has(.rueckgaengig-leiste) .nach-oben { bottom: 8rem; }
+}

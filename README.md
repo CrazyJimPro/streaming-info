@@ -156,6 +156,10 @@ genaue Uhrzeit zeigt der Tooltip. Der Knopf **↻** daneben holt alles neu. Ist
 ein Abruf schiefgegangen, steht dort zusätzlich **„⚠ Fehler bei …"** mit den
 betroffenen Anbietern.
 
+**Schnell wieder nach oben:** Sobald du auf der Startseite ein Stück
+heruntergescrollt hast, erscheint unten rechts ein runder Pfeil **↑**. Ein
+Klick darauf springt direkt an den Seitenanfang.
+
 **Zugriff von einem anderen Rechner im Netzwerk:** Läuft die App z.B. in einer
 VM, erreichst du sie auch über `http://<IP-der-VM>:5100` von einem anderen
 Gerät im selben Netzwerk — nicht nur über `localhost` auf der VM selbst. Ohne

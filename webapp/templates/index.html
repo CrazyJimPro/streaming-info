@@ -293,7 +293,30 @@
   {% endfor %}
   </div>
 
+  <button type="button" class="nach-oben" id="nach-oben" title="Nach oben" aria-label="Nach oben" tabindex="-1" aria-hidden="true">↑</button>
+
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script>
+    // Pfeil unten rechts: taucht auf, sobald man ein Stueck heruntergescrollt
+    // hat, und springt per Klick direkt an den Seitenanfang (ohne Animation -
+    // bei ueber hundert Karten waere sanftes Rollen eher Warten).
+    (function () {
+      var pfeil = document.getElementById("nach-oben");
+      function pruefen() {
+        var zeigen = window.scrollY > 300;
+        pfeil.classList.toggle("sichtbar", zeigen);
+        pfeil.tabIndex = zeigen ? 0 : -1;
+        pfeil.setAttribute("aria-hidden", String(!zeigen));
+      }
+      window.addEventListener("scroll", pruefen, { passive: true });
+      pfeil.addEventListener("click", function () {
+        window.scrollTo(0, 0);
+        // Fokus nicht auf dem gleich unsichtbaren Pfeil stehen lassen.
+        pfeil.blur();
+      });
+      pruefen();
+    })();
+  </script>
   <script src="{{ url_for('static', filename='ansicht.js') }}"></script>
   <script src="{{ url_for('static', filename='schnellfilter.js') }}"></script>
   <script src="{{ url_for('static', filename='scrollposition.js') }}"></script>
