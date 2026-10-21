@@ -551,6 +551,32 @@ section.abschnitt h2 {
   gap: 0.4rem;
 }
 
+/* "Nach Bereich | Nach Woche" - als zusammenhaengender Schalter gezeichnet,
+   damit er nicht wie ein weiterer Filter aussieht. */
+.ansicht-umschalter {
+  display: inline-flex;
+  padding: 0.2rem;
+  gap: 0.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+}
+
+.ansicht-umschalter .filter-chip { border-color: transparent; background: transparent; }
+.ansicht-umschalter .filter-chip[aria-pressed="true"] { background: var(--accent-grad); }
+
+/* Welche der beiden fertig gerenderten Ansichten sichtbar ist, entscheidet
+   allein html[data-ansicht] (gesetzt im Kopf-Skript und von ansicht.js). */
+html[data-ansicht="woche"] [data-ansicht-inhalt="bereich"],
+html:not([data-ansicht="woche"]) [data-ansicht-inhalt="woche"] { display: none; }
+
+.woche-zeitraum {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 0.4rem;
+}
+
 .filter-chip {
   font-size: 0.8rem;
   padding: 0.35rem 0.85rem;

@@ -30,11 +30,23 @@
     return eigene.some(function (q) { return quellen[q]; });
   }
 
+  // Nur die Abschnitte der gerade sichtbaren Ansicht (Nach Bereich / Nach
+  // Woche, siehe ansicht.js) plus die Merkliste, die in beiden steht. Sonst
+  // zaehlten Karten der versteckten Ansicht als Treffer mit und der Hinweis
+  // "Keine Treffer" bliebe aus, obwohl man nichts sieht.
+  function sichtbareAbschnitte() {
+    var ansicht = document.documentElement.getAttribute("data-ansicht") === "woche" ? "woche" : "bereich";
+    return Array.prototype.filter.call(document.querySelectorAll("section[data-abschnitt]"), function (abschnitt) {
+      var behaelter = abschnitt.closest("[data-ansicht-inhalt]");
+      return !behaelter || behaelter.getAttribute("data-ansicht-inhalt") === ansicht;
+    });
+  }
+
   function anwenden() {
     var aktiv = art !== "alle" || quellenGewaehlt().length > 0;
     var irgendwasSichtbar = false;
 
-    document.querySelectorAll("section[data-abschnitt]").forEach(function (abschnitt) {
+    sichtbareAbschnitte().forEach(function (abschnitt) {
       var inMerkliste = abschnitt.getAttribute("data-abschnitt") === "merkliste";
       var sichtbare = 0;
       abschnitt.querySelectorAll(".karte").forEach(function (karte) {
@@ -79,6 +91,7 @@
     });
   });
   zuruecksetzen.addEventListener("click", allesZuruecksetzen);
+  document.addEventListener("si-ansicht-gewechselt", anwenden);
   document.getElementById("filter-leer-zuruecksetzen").addEventListener("click", function (e) {
     e.preventDefault();
     allesZuruecksetzen();

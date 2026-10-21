@@ -11,6 +11,12 @@
         var t = localStorage.getItem("si-theme");
         if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
+      // Gemerkte Ansicht (Nach Bereich / Nach Woche) schon vor dem ersten
+      // Zeichnen setzen, sonst blitzt kurz die falsche auf. Bewusst gemerkt,
+      // anders als der Schnellfilter: sie versteckt keine Inhalte.
+      try {
+        if (localStorage.getItem("si-ansicht") === "woche") document.documentElement.setAttribute("data-ansicht", "woche");
+      } catch (e) {}
     })();
   </script>
 </head>
@@ -76,6 +82,10 @@
   {# Schnellfilter: reine Ansicht im Browser, kein neuer Abruf und keine
      Aenderung an den Einstellungen. Beim naechsten Oeffnen ist wieder alles da. #}
   <div class="schnellfilter" id="schnellfilter">
+    <div class="ansicht-umschalter" role="group" aria-label="Ansicht">
+      <button type="button" class="filter-chip" data-ansicht-wahl="bereich" aria-pressed="true">Nach Bereich</button>
+      <button type="button" class="filter-chip" data-ansicht-wahl="woche" aria-pressed="false">Nach Woche</button>
+    </div>
     <div class="schnellfilter-art" role="group" aria-label="Art">
       <button type="button" class="filter-chip" data-art="alle" aria-pressed="true">Alle</button>
       <button type="button" class="filter-chip" data-art="serie" aria-pressed="false">Serien</button>
@@ -119,6 +129,10 @@
   {% endif %}
 
   {% macro kachel(eintrag, feste_farbe=None, festes_label=None, gemerkt=False) %}
+  {# Kino/Digital bringen ihr Etikett am Eintrag mit (siehe _abschnitte_laden) -
+     das gilt dann in jeder Ansicht, auch in der gemischten Wochenansicht. #}
+  {% set etikett_farbe = eintrag.feste_farbe or feste_farbe %}
+  {% set etikett_text = eintrag.festes_label or festes_label %}
   {% set details_url = url_for('details', medientyp=eintrag.medientyp, tmdb_id=eintrag.tmdb_id) %}
   {% set ist_gemerkt = gemerkt or (eintrag.tmdb_id, eintrag.medientyp) in gemerkt_ids %}
   <article class="karte" data-medientyp="{{ eintrag.medientyp }}" data-kennung="{{ eintrag.medientyp }}-{{ eintrag.tmdb_id }}"
@@ -189,8 +203,8 @@
       </div>
       {% else %}
       <div class="badges">
-        {% if feste_farbe %}
-        <span class="badge" style="background:{{ feste_farbe }}">{{ festes_label }}</span>
+        {% if etikett_farbe %}
+        <span class="badge" style="background:{{ etikett_farbe }}">{{ etikett_text }}</span>
         {% else %}
           {% for anbieter in eintrag.anbieter_liste %}
           <span class="badge" style="background:{{ anbieter.farbe }}">{{ anbieter.name }}</span>
@@ -221,6 +235,9 @@
   </section>
   {% endif %}
 
+  {# Zwei Ansichten derselben Karten, beide fertig gerendert - umgeschaltet wird
+     nur per CSS ueber html[data-ansicht] (siehe Kopf und ansicht.js). #}
+  <div data-ansicht-inhalt="bereich">
   <section class="abschnitt" data-abschnitt="streaming">
     <h2>📺 Startet demnächst im Streaming</h2>
     {% if streaming %}
@@ -236,7 +253,7 @@
     <h2>🎬 Kinostarts</h2>
     {% if kino %}
     <div class="karten-grid">
-      {% for eintrag in kino %}{{ kachel(eintrag, kino_farbe, 'Kino') }}{% endfor %}
+      {% for eintrag in kino %}{{ kachel(eintrag) }}{% endfor %}
     </div>
     {% else %}
     <p class="leer-hinweis">Keine Kinostarts im gewählten Zeitraum gefunden.</p>
@@ -255,14 +272,29 @@
     </p>
     {% if digital %}
     <div class="karten-grid">
-      {% for eintrag in digital %}{{ kachel(eintrag, '#6b7280', 'digital') }}{% endfor %}
+      {% for eintrag in digital %}{{ kachel(eintrag) }}{% endfor %}
     </div>
     {% else %}
     <p class="leer-hinweis">Keine digitalen Filmstarts im gewählten Zeitraum angekündigt.</p>
     {% endif %}
   </section>
+  </div>
+
+  <div data-ansicht-inhalt="woche">
+  {% for woche in zeitleiste %}
+  <section class="abschnitt" data-abschnitt="{{ woche.kennung }}">
+    <h2>📅 {{ woche.titel }} <span class="woche-zeitraum">{{ woche.zeitraum }}</span></h2>
+    <div class="karten-grid">
+      {% for eintrag in woche.eintraege %}{{ kachel(eintrag) }}{% endfor %}
+    </div>
+  </section>
+  {% else %}
+  <p class="leer-hinweis">Im gewählten Zeitraum ist nichts angekündigt. Ein längerer Vorschau-Zeitraum in den <a href="{{ url_for('einstellungen_seite') }}">Einstellungen</a> bringt meist mehr.</p>
+  {% endfor %}
+  </div>
 
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='ansicht.js') }}"></script>
   <script src="{{ url_for('static', filename='schnellfilter.js') }}"></script>
   <script src="{{ url_for('static', filename='scrollposition.js') }}"></script>
   <script>

@@ -422,7 +422,51 @@ def _abschnitte_laden(einstellungen: dict, anbieter_karte: dict, heute: date) ->
     kino_rows = hole_starts_im_zeitraum(heute, bis, ("kino",), db_pfad=DB_PFAD)
     kino = _starts_aufbereiten(filtere_zeilen(kino_rows, einstellungen), anbieter_karte, heute)
 
+    # Kino und Digital tragen statt der Anbieter-Badges ein festes Etikett. Es
+    # haengt am Eintrag selbst (nicht am Abschnitt), damit die Wochenansicht,
+    # die alle drei mischt, es ebenso zeigt.
+    kino_farbe = anbieter_karte.get("kino", {}).get("farbe", "#e63946")
+    for eintrag in kino:
+        eintrag["feste_farbe"], eintrag["festes_label"] = kino_farbe, "Kino"
+    for eintrag in digital:
+        eintrag["feste_farbe"], eintrag["festes_label"] = DIGITAL_FARBE, "digital"
+
     return streaming, kino, digital, bis
+
+
+def _zeitleiste(streaming: list[dict], kino: list[dict], digital: list[dict], heute: date) -> list[dict]:
+    """Alle drei Bereiche gemischt und nach Kalenderwoche (Mo-So) gruppiert -
+    fuer die Ansicht "Nach Woche". Innerhalb einer Woche nach Datum, bei
+    gleichem Tag nach Titel."""
+    alle = sorted(streaming + kino + digital, key=lambda e: (e["startdatum"], e["titel"].lower()))
+    diese_woche = heute - timedelta(days=heute.weekday())
+    wochen: dict[date, list[dict]] = {}
+    for eintrag in alle:
+        try:
+            tag = datetime.strptime(eintrag["startdatum"], "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            continue
+        wochen.setdefault(tag - timedelta(days=tag.weekday()), []).append(eintrag)
+
+    ergebnis = []
+    for montag, eintraege in wochen.items():
+        sonntag = montag + timedelta(days=6)
+        abstand = (montag - diese_woche).days // 7
+        if abstand <= 0:
+            titel = "Diese Woche"
+        elif abstand == 1:
+            titel = "Nächste Woche"
+        else:
+            titel = f"KW {montag.isocalendar()[1]}"
+        ergebnis.append(
+            {
+                "titel": titel,
+                "zeitraum": f"{montag:%d.%m.}–{sonntag:%d.%m.}",
+                "kennung": f"woche-{montag.isoformat()}",
+                "eintraege": eintraege,
+            }
+        )
+    return ergebnis
 
 
 def _gerade_ausgeblendet(kennung: str | None, einstellungen: dict) -> dict | None:
@@ -503,7 +547,7 @@ def index():
         scan=_scan_status,
         api_schluessel_fehlt=api_schluessel_fehlt,
         einrichtung_offen=einrichtung_offen,
-        kino_farbe=next((a["farbe"] for a in anbieter_karte.values() if a["schluessel"] == "kino"), "#e63946"),
+        zeitleiste=_zeitleiste(streaming, kino, digital, heute),
     )
 
 

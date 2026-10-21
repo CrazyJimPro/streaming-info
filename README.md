@@ -25,6 +25,7 @@ keine geplante Aufgabe, kein Cronjob.
 | das Tool zum ersten Mal einrichten | [Einrichtung in 3 Schritten](#einrichtung-in-3-schritten) |
 | es täglich benutzen | [Starten und beenden](#starten-und-beenden) |
 | auf der Startseite nur Netflix, nur Filme o. Ä. sehen | [Schnellfilter](#schnellfilter-nur-bestimmte-anbieter-oder-nur-filme) |
+| sehen, was diese und nächste Woche startet – egal wo | [Ansicht nach Woche](#ansicht-nach-woche) |
 | mir vorab einen Trailer ansehen | [Trailer ansehen](#trailer-ansehen) |
 | mehr zu einem Titel erfahren (Beschreibung, Darsteller, FSK) | [Detailansicht](#detailansicht) |
 | sehen, ob ein gemerkter Titel schon läuft | ["Jetzt verfügbar" in der Merkliste](#jetzt-verfügbar-in-der-merkliste) |
@@ -188,6 +189,28 @@ Gut zu wissen:
   Einstellungen. Beim nächsten Öffnen der App ist wieder alles zu sehen.
 - Welche Anbieter **überhaupt** abgefragt werden, legst du weiterhin unter
   *Einstellungen → Streaming-Anbieter* fest. Nur diese erscheinen als Knopf.
+
+---
+
+# Ansicht nach Woche
+
+Ganz links in der Filterleiste sitzt der Umschalter
+**„Nach Bereich | Nach Woche"**.
+
+- **Nach Bereich** (wie bisher): getrennte Abschnitte für Streaming, Kino und
+  Digital.
+- **Nach Woche:** alles gemischt und nach Kalenderwochen sortiert — **„Diese
+  Woche"**, **„Nächste Woche"**, danach **„KW 47 · 16.11.–22.11."** usw.
+  Woher ein Titel kommt, zeigt weiterhin sein farbiges Abzeichen (Netflix,
+  Kino, digital …).
+
+Die Merkliste steht in beiden Ansichten oben. Der Schnellfilter wirkt in
+beiden genauso.
+
+Anders als der Schnellfilter **merkt sich die App die gewählte Ansicht**:
+Wer einmal „Nach Woche" gewählt hat, bekommt sie auch beim nächsten Öffnen.
+Gespeichert wird das im Browser. Auf einem anderen Rechner oder in einem
+anderen Browser beginnt die Seite wieder mit „Nach Bereich".
 
 ---
 
