@@ -359,6 +359,10 @@ Sender einen Termin nennt, taucht er von selbst auf. Geprüft wurde das unter
 anderem bei Stranger Things, Wednesday, The Boys und Bridgerton: alle ohne
 Termin in der TMDB-Datenbank.
 
+Dieselbe Erklärung steht auch in der App: ein Klick auf das kleine **ⓘ**
+neben der Überschrift „Deine Merkliste" klappt sie auf (beim Abschnitt
+„Filme mit digitalem Start" erklärt das ⓘ, warum dort kein Anbieter steht).
+
 ### Titel ausblenden
 
 Das Gegenstück: Neben dem Stern sitzt auf jeder Karte in der Übersicht ein

@@ -394,6 +394,27 @@ section.abschnitt h2 {
   line-height: 1.45;
 }
 
+/* Kleines ⓘ hinter einer Abschnittsueberschrift, klappt den Erklaertext auf. */
+.hinweis-knopf {
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  margin-left: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.hinweis-knopf[aria-expanded="true"] { color: var(--fg); border-color: var(--accent); }
+.hinweis-knopf:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.abschnitt-hinweis[hidden] { display: none; }
+
 .abschnitt-hinweis {
   color: var(--muted);
   font-size: 0.82rem;

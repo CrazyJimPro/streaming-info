@@ -204,8 +204,11 @@
 
   {% if merkliste %}
   <section class="abschnitt" data-abschnitt="merkliste">
-    <h2>⭐ Deine Merkliste</h2>
-    <p class="abschnitt-hinweis">
+    <h2>⭐ Deine Merkliste
+      <button type="button" class="hinweis-knopf" aria-expanded="false" aria-controls="hinweis-merkliste"
+              title="Erklärung ein-/ausblenden" aria-label="Erklärung zur Merkliste">ⓘ</button>
+    </h2>
+    <p class="abschnitt-hinweis" id="hinweis-merkliste" hidden>
       Gemerkte Titel werden einzeln bei TMDB nachgefragt &mdash; unabhängig vom
       Vorschau-Zeitraum, von der Anbieterauswahl und vom Genre- und Sprachfilter.
       <strong>„Noch kein Termin bekannt"</strong> heißt: TMDB führt für diesen Titel
@@ -241,8 +244,11 @@
   </section>
 
   <section class="abschnitt" data-abschnitt="digital">
-    <h2>💿 Filme mit digitalem Start</h2>
-    <p class="abschnitt-hinweis">
+    <h2>💿 Filme mit digitalem Start
+      <button type="button" class="hinweis-knopf" aria-expanded="false" aria-controls="hinweis-digital"
+              title="Erklärung ein-/ausblenden" aria-label="Erklärung zu digitalen Starts">ⓘ</button>
+    </h2>
+    <p class="abschnitt-hinweis" id="hinweis-digital" hidden>
       Filme, für die ein Termin für die digitale Auswertung (Streaming/Kauf) angekündigt ist.
       <strong>Ohne Plattformangabe:</strong> TMDB nennt für kommende Filme kein Portal &mdash;
       das Datum stimmt, wo der Film dann läuft, steht dort schlicht nicht.
@@ -259,6 +265,17 @@
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
   <script src="{{ url_for('static', filename='schnellfilter.js') }}"></script>
   <script src="{{ url_for('static', filename='scrollposition.js') }}"></script>
+  <script>
+    // Erklaertexte hinter dem ⓘ an der Ueberschrift: einmal gelesen, belegen
+    // sie sonst dauerhaft Platz. Startet bei jedem Aufruf zugeklappt.
+    document.querySelectorAll(".hinweis-knopf").forEach(function (knopf) {
+      var text = document.getElementById(knopf.getAttribute("aria-controls"));
+      knopf.addEventListener("click", function () {
+        text.hidden = !text.hidden;
+        knopf.setAttribute("aria-expanded", String(!text.hidden));
+      });
+    });
+  </script>
   <script>
     (function () {
       var laeuft = {{ 'true' if scan.laeuft else 'false' }};
