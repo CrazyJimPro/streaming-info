@@ -22,6 +22,7 @@ from pathlib import Path
 
 from scraper.einstellungen import (
     CONFIG_PFAD,
+    EIGENER_TERMIN_SONSTIGES,
     lade_api_schluessel,
     lade_einstellungen,
     speichere_api_schluessel,
@@ -115,6 +116,37 @@ def _liste_bereinigen(roh: object) -> tuple[list[dict], int]:
     return eintraege, verworfen
 
 
+def _termine_bereinigen(
+    roh: object, merkliste: list[dict], bekannte_anbieter: list[str] | None
+) -> tuple[list[dict], int]:
+    """Wie _liste_bereinigen, fuer die eigenen Termine an gemerkten Titeln:
+    gueltiges Datum, bekannter Anbieter (oder "Sonstiges") und der Titel muss
+    in der eingespielten Merkliste stehen - ein Termin ohne gemerkten Titel
+    waere unsichtbar und liesse sich nirgends mehr entfernen."""
+    if not isinstance(roh, list):
+        return [], 0
+    termine: list[dict] = []
+    verworfen = 0
+    for e in roh:
+        try:
+            tmdb_id = int(e["tmdb_id"])
+            medientyp = str(e["medientyp"])
+            datum = datetime.strptime(str(e["datum"]), "%Y-%m-%d").date().isoformat()
+            anbieter = str(e["anbieter"])
+        except (TypeError, KeyError, ValueError):
+            verworfen += 1
+            continue
+        anbieter_ok = anbieter == EIGENER_TERMIN_SONSTIGES or bekannte_anbieter is None or anbieter in bekannte_anbieter
+        gemerkt = any(m["tmdb_id"] == tmdb_id and m["medientyp"] == medientyp for m in merkliste)
+        if not anbieter_ok or not gemerkt:
+            verworfen += 1
+            continue
+        if any(t["tmdb_id"] == tmdb_id and t["medientyp"] == medientyp for t in termine):
+            continue
+        termine.append({"tmdb_id": tmdb_id, "medientyp": medientyp, "datum": datum, "anbieter": anbieter})
+    return termine, verworfen
+
+
 def lies_sicherung(rohdaten: bytes | str, bekannte_anbieter: list[str] | None = None) -> dict:
     """Prueft eine hochgeladene Datei und gibt den bereinigten Inhalt zurueck.
 
@@ -196,6 +228,12 @@ def lies_sicherung(rohdaten: bytes | str, bekannte_anbieter: list[str] | None = 
     einstellungen["ausgeblendet"], verworfen_aus = _liste_bereinigen(roh_einstellungen.get("ausgeblendet"))
     if verworfen_merk or verworfen_aus:
         notizen.append(f"{verworfen_merk + verworfen_aus} unlesbare(r) Titeleintrag übergangen")
+    # Aeltere Sicherungen (vor v1.7.0) kennen das Feld nicht - dann eben keine.
+    einstellungen["eigene_termine"], verworfen_termine = _termine_bereinigen(
+        roh_einstellungen.get("eigene_termine"), einstellungen["merkliste"], bekannte_anbieter
+    )
+    if verworfen_termine:
+        notizen.append(f"{verworfen_termine} unbrauchbare(r) eigene(r) Termin übergangen")
 
     schluessel = daten.get("tmdb_api_key")
     schluessel = schluessel.strip() if isinstance(schluessel, str) and schluessel.strip() else None

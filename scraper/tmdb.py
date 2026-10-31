@@ -59,6 +59,24 @@ MIN_POPULARITAET_KINO = 8.0
 MIN_POPULARITAET_SERIE = 2.0
 MIN_POPULARITAET_DIGITAL = 3.0
 
+# --- Neu im Abo -----------------------------------------------------------
+# Wann ein Film ins Abo eines Anbieters wandert (z.B. "Michael" am 06.11.2026
+# zu WOW), kuendigt TMDB fuer Deutschland nicht an - geprueft: unter DE stehen
+# nur Kino-, Kauf-/Leih- und Blu-ray-Termin, das Pay-TV-Fenster fehlt (fuer die
+# USA ist es eingetragen). Auch JustWatchs "Demnaechst"-Seite fuehrt dafuer
+# nichts. Erkennbar ist es erst, wenn der Film im Abo-Katalog liegt - deshalb
+# wird dieser je Anbieter abgefragt und mit dem Vorlauf verglichen.
+# Nur Filme der letzten 18 Monate: Abo-Fenster folgen dem Kinostart meist
+# nach 6-12 Monaten, und der Katalog bleibt so klein genug, um ihn VOLLSTAENDIG
+# zu lesen (31.10.2026: Netflix 630, Prime 328, Disney 145, WOW 88 Titel) -
+# ein abgeschnittener Katalog wuerde beim naechsten Lauf falsche "Neu"-Treffer
+# liefern.
+ABO_RUECKBLICK_MONATE = 18
+MAX_SEITEN_ABO = 40
+# Gilt erst bei der Anzeige, nicht beim Einlesen: sonst wuerde ein Titel, dessen
+# Popularitaet um die Schwelle pendelt, beim Ueberschreiten als "neu" gelten.
+MIN_POPULARITAET_ABO = 3.0
+
 
 def hole_genres(session: requests.Session, api_key: str) -> dict[int, str]:
     """Liefert eine gemeinsame Genre-Zuordnung (id -> Name) ueber Filme und Serien hinweg."""
@@ -305,6 +323,40 @@ def hole_digital_starts(
             art="digital",
         )
         ergebnisse.append((titel, start))
+    return ergebnisse
+
+
+def hole_abo_filme(
+    session: requests.Session, api_key: str, provider_id: int, ab_erscheinung: date
+) -> list[TitelEintrag]:
+    """Alle Filme ab 'ab_erscheinung', die beim Anbieter gerade im Abo
+    (flatrate) liegen - fuer den Abgleich "Neu im Abo".
+
+    Anders als _blaettere bricht hier ein Seitenfehler den ganzen Abruf ab
+    (TmdbFehler): ein nur halb gelesener Katalog darf nicht als vollstaendig
+    gelten, sonst kaemen die fehlenden Titel beim naechsten Lauf als "neu".
+    """
+    ergebnisse: list[TitelEintrag] = []
+    seite, gesamtseiten = 1, 1
+    while seite <= gesamtseiten:
+        daten = get_json(
+            session, "/discover/movie", api_key,
+            page=seite,
+            watch_region="DE",
+            with_watch_providers=provider_id,
+            with_watch_monetization_types="flatrate",
+            sort_by="popularity.desc",
+            include_adult="false",
+            **{"primary_release_date.gte": ab_erscheinung.isoformat()},
+        )
+        ergebnisse.extend(_zu_titel_eintrag(r, "film") for r in daten.get("results", []))
+        gesamtseiten = daten.get("total_pages", 1)
+        if gesamtseiten > MAX_SEITEN_ABO:
+            raise TmdbFehler(
+                f"Abo-Katalog von Anbieter {provider_id} hat {gesamtseiten} Seiten, mehr als {MAX_SEITEN_ABO} - "
+                "unvollstaendig waere er fuer den Abgleich unbrauchbar"
+            )
+        seite += 1
     return ergebnisse
 
 

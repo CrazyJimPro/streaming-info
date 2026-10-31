@@ -496,6 +496,37 @@ section.abschnitt h2 {
 
 .details-aktionen button, .details-aktionen .knopf { white-space: nowrap; }
 
+/* Eigener Termin an gemerkten Titeln (Detailseite). */
+.eigener-termin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+}
+/* Die beiden Formulare (Speichern/Entfernen) reihen ihre Bedienelemente in
+   dieselbe Flex-Zeile ein - sonst braechen die Knoepfe einzeln um. */
+.eigener-termin form { display: contents; }
+.eigener-termin-formular label { font-weight: 600; flex-basis: 100%; }
+.eigener-termin input[type="date"], .eigener-termin select {
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  color-scheme: light dark;
+}
+/* Kalender-Symbol und Auswahlliste folgen sonst nur dem System, nicht dem
+   Umschalter - im dunklen Theme waere das Symbol dann schwarz auf dunkel. */
+:root[data-theme="dark"] .eigener-termin input[type="date"], :root[data-theme="dark"] .eigener-termin select { color-scheme: dark; }
+:root[data-theme="light"] .eigener-termin input[type="date"], :root[data-theme="light"] .eigener-termin select { color-scheme: light; }
+.eigener-termin .abschnitt-hinweis { flex-basis: 100%; margin: 0; }
+
 /* Auf dem Handy waere neben dem 180px-Poster kaum Platz fuer Text und Knoepfe. */
 @media (max-width: 560px) {
   .details-ansicht { flex-direction: column; }

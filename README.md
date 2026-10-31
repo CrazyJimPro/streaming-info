@@ -8,11 +8,15 @@ Ein privates, lokales Tool. Es zeigt in einer kleinen Web-App im Browser,
   Disney+, Apple TV+, Paramount+, WOW (Sky) und HBO Max, farbig nach Anbieter
 - **Kino** — deutsche Kinostarttermine
 - **Digital** — Filme mit angekündigtem Termin für die digitale Auswertung
+- **Neu im Abo** — neuere Kinofilme, die gerade ins Abo eines deiner Anbieter
+  gekommen sind (z. B. ein Film, der jetzt bei WOW läuft)
 - **Suche** — „Wo läuft das?“: Titel eingeben, die App zeigt, bei welchem Anbieter
   er in Deutschland abrufbar ist
 
 Was **bereits läuft**, steht bewusst nicht drin. Die Übersicht beantwortet
-„worauf kann ich mich freuen", nicht „was liegt gerade im Katalog".
+„worauf kann ich mich freuen", nicht „was liegt gerade im Katalog". Einzige
+Ausnahme ist „Neu im Abo“: Abo-Starts von Filmen kündigt TMDB nicht an, sie
+lassen sich erst am Starttag erkennen.
 
 Es läuft **nichts im Hintergrund**: Daten werden geholt, wenn du die App
 startest — und mit dem Knopf **„Beenden"** ist alles wieder aus. Kein Dienst,
@@ -34,6 +38,8 @@ keine geplante Aufgabe, kein Cronjob.
 | die Starts in meinem eigenen Kalender sehen | [Kalender-Export (.ics)](#kalender-export-ics) |
 | wissen, wo ein Film oder eine Serie läuft | [Suche](#suche-wo-läuft-das) |
 | bestimmte Serien im Blick behalten | [Merkliste](#merkliste-bestimmte-titel-im-blick-behalten) |
+| einen Termin eintragen, den die App nicht kennt (z. B. „Michael ab 6.11. bei WOW“) | [Eigener Termin](#eigener-termin) |
+| sehen, welche Kinofilme gerade ins Abo gekommen sind | [Neu im Abo](#neu-im-abo) |
 | meine Liste sichern | [Sicherung erstellen](#sicherung-erstellen) |
 | meine Liste auf einen anderen Rechner holen | [Sicherung einspielen](#sicherung-einspielen) |
 | dass weniger Unbekanntes angezeigt wird | [Weitere Einstellungen](#weitere-einstellungen) |
@@ -439,13 +445,61 @@ Rückgängig machen geht auf drei Wegen:
 
 ---
 
+# Eigener Termin
+
+Manche Starttermine kennt TMDB nicht, vor allem **wann ein Kinofilm ins Abo
+eines Anbieters kommt**. Ein Beispiel: „Michael“ startet am 06.11.2026 bei WOW,
+aber bei TMDB stehen für Deutschland nur der Kinostart, der Kauf-/Leihstart und
+die Blu-ray. Liest du so einen Termin irgendwo (Presse, Anbieter-Newsletter),
+trag ihn selbst ein.
+
+### So geht's
+
+1. Den Titel **merken** (Stern ☆ auf der Karte, über die Suche oder in den
+   Einstellungen). Ein eigener Termin geht nur bei gemerkten Titeln.
+2. Auf das Poster oder den Titel klicken. Die **Detailseite** öffnet sich.
+3. Im Kasten **„Eigener Termin“** das Datum wählen und den Anbieter aussuchen
+   (alle sieben, dazu „Kino“ und „Sonstiges“).
+4. Auf **„Speichern“** klicken.
+
+Der Titel steht danach mit Countdown und Anbieter-Logo in der Merkliste.
+Liegt der Termin im Vorschau-Zeitraum, erscheint er außerdem im Streaming-Bereich
+(bzw. bei „Kino“ unter den Kinostarts), in der Wochenansicht und im Kalender.
+Dein Termin gilt dabei **statt** dem von TMDB. Ist er vorbei, zeigt die Karte
+wie gewohnt „gestartet“ und darunter, wo der Titel jetzt läuft.
+
+Zum Löschen auf der Detailseite **„Entfernen“** klicken. Nimmst du den Titel
+von der Merkliste, verschwindet sein eigener Termin mit. Eigene Termine stecken
+auch in der [Sicherung](#sicherung-erstellen).
+
+---
+
+# Neu im Abo
+
+Dieser Abschnitt steht auf der Startseite unter der Merkliste. Er zeigt
+**Kinofilme der letzten 18 Monate, die in den letzten 14 Tagen neu ins Abo**
+eines deiner Anbieter gekommen sind, mit dem Logo des Anbieters und „seit …“.
+
+Warum erst ab dem Starttag und nicht vorher: Solche Abo-Starts kündigt TMDB für
+Deutschland nicht an (auch JustWatchs „Demnächst“-Liste führt sie nicht). Die
+App liest deshalb bei jedem Abruf die Abo-Kataloge deiner Anbieter und vergleicht
+sie mit dem letzten Stand. Was neu dazugekommen ist, landet hier. Wer den Termin
+schon vorher kennt, trägt ihn als [eigenen Termin](#eigener-termin) ein.
+
+**Direkt nach dem Update auf Version 1.7.0 ist der Abschnitt leer.** Der erste
+Abruf merkt sich nur, was schon im Abo liegt. Neues taucht ab dem nächsten Tag
+auf, an dem sich in einem Katalog etwas ändert. Die Angaben kommen von JustWatch
+über TMDB und können ein, zwei Tage hinterherhinken.
+
+---
+
 # Sicherung erstellen
 
 Deine Merkliste und die ausgeblendeten Titel sind Handarbeit — das Einzige am
 ganzen Tool, was sich nicht von selbst wiederbeschafft. Dafür gibt es die
 Sicherung.
 
-**In der Sicherung steckt:** Merkliste, ausgeblendete Titel, Vorschau-Zeitraum,
+**In der Sicherung steckt:** Merkliste samt eigenen Terminen, ausgeblendete Titel, Vorschau-Zeitraum,
 Anbieter-, Genre- und Sprachauswahl sowie dein TMDB-Schlüssel.
 **Nicht drin:** die Termine selbst — die holt der nächste Abruf in Sekunden neu.
 
@@ -575,7 +629,9 @@ Die Schwellen stehen als `MIN_POPULARITAET_*` oben in
 
 Bei kommenden **Filmen** nennt TMDB zwar den Termin, aber **keine Plattform**.
 Deshalb stehen sie im eigenen Abschnitt „Digital" ohne Anbieter-Logo — geraten
-wird nichts. Bei **Serien** ist die Zuordnung dagegen sauber, weil sie über die
+wird nichts. Dasselbe gilt, wenn ein schon erschienener Film ins Abo eines
+Anbieters wandert: Das erkennt die App erst am Starttag ([Neu im Abo](#neu-im-abo)),
+vorher hilft ein [eigener Termin](#eigener-termin). Bei **Serien** ist die Zuordnung dagegen sauber, weil sie über die
 TV-Netzwerke des jeweiligen Anbieters läuft. Für WOW/Sky bleibt die Ausbeute
 dünn, dort führt TMDB nur das Netzwerk Sky Deutschland.
 
@@ -631,6 +687,14 @@ Steht bei ihm *„Noch kein Termin bekannt"*, kennt TMDB schlicht kein Datum —
 siehe [Merkliste](#merkliste-bestimmte-titel-im-blick-behalten). Fehlt er ganz,
 ist er vermutlich nicht gespeichert: nach dem Hinzufügen muss unten
 **„Speichern"** geklickt werden.
+
+### Ein Film startet bei einem Anbieter, steht aber nirgends
+
+Kommt ein schon erschienener Kinofilm ins Abo (z. B. „Michael“ am 06.11.2026 zu
+WOW), kennt TMDB diesen Termin für Deutschland in aller Regel nicht. Vorab hilft
+nur ein [eigener Termin](#eigener-termin). Ab dem Starttag erscheint der Film
+von selbst unter [Neu im Abo](#neu-im-abo), sofern er nicht älter als 18 Monate
+ist und WOW in den Einstellungen angehakt ist.
 
 ---
 

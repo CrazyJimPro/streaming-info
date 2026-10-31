@@ -279,6 +279,30 @@
   </section>
   {% endif %}
 
+  {# Rueckblickend statt angekuendigt - passt deshalb in keine Wochen-Zeitleiste
+     und steht wie die Merkliste in beiden Ansichten. #}
+  <section class="abschnitt" data-abschnitt="abo">
+    <h2>🆕 Neu im Abo
+      <button type="button" class="hinweis-knopf" aria-expanded="false" aria-controls="hinweis-abo"
+              title="Erklärung ein-/ausblenden" aria-label="Erklärung zu Neu im Abo">ⓘ</button>
+    </h2>
+    <p class="abschnitt-hinweis" id="hinweis-abo" hidden>
+      Filme aus den letzten 18 Monaten, die in den letzten {{ neu_im_abo_tage }} Tagen neu ins Abo
+      eines deiner Anbieter gekommen sind &mdash; zum Beispiel ein Kinofilm, der jetzt bei WOW läuft.
+      <strong>Erst ab dem Starttag:</strong> Solche Abo-Starts kündigt TMDB für Deutschland
+      nicht vorher an, die App erkennt sie, sobald der Film im Katalog liegt. Kennst du den
+      Termin schon vorher (etwa aus der Presse), merk dir den Film und trag auf seiner
+      Detailseite einen eigenen Termin ein.
+    </p>
+    {% if neu_im_abo %}
+    <div class="karten-grid">
+      {% for eintrag in neu_im_abo %}{{ kachel(eintrag) }}{% endfor %}
+    </div>
+    {% else %}
+    <p class="leer-hinweis">In den letzten {{ neu_im_abo_tage }} Tagen ist bei deinen Anbietern kein neuerer Film ins Abo gekommen. Direkt nach dem Update bleibt dieser Bereich leer: Der erste Abgleich merkt sich nur, was schon da ist.</p>
+    {% endif %}
+  </section>
+
   {# Zwei Ansichten derselben Karten, beide fertig gerendert - umgeschaltet wird
      nur per CSS ueber html[data-ansicht] (siehe Kopf und ansicht.js). #}
   <div data-ansicht-inhalt="bereich">

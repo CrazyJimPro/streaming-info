@@ -8,12 +8,15 @@ Gesucht wird ausschliesslich Zukuenftiges: kommende Serien und Staffelstarts
 je Anbieter, deutsche Kinostarts und digitale Filmstarts. Der frueher hier
 laufende Komplettabzug aller Anbieterkataloge (rund 18.000 Titel pro Lauf,
 nur um per Vergleich "neu dazugekommen" zu erkennen) ist entfallen - damit
-ist ein Lauf auch deutlich kuerzer.
+ist ein Lauf auch deutlich kuerzer. Einzige Ausnahme seit v1.7.0: fuer
+"Neu im Abo" werden die Abo-Kataloge gelesen, aber nur Filme der letzten 18
+Monate (zusammen gut 1.300 Titel) - siehe hole_abo_filme.
 """
 from __future__ import annotations
 
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -24,11 +27,16 @@ from scraper.storage import (
     init_db,
     markiere_quelle_erfolg,
     markiere_quelle_fehler,
+    quelle_schon_erfolgreich,
+    raeume_abo_katalog_auf,
     raeume_starts_auf,
+    speichere_abo_katalog,
     speichere_starts,
     speichere_titel,
 )
 from scraper.tmdb import (
+    ABO_RUECKBLICK_MONATE,
+    hole_abo_filme,
     hole_digital_starts,
     hole_genres,
     hole_kinostarts,
@@ -45,6 +53,43 @@ GENRES_CACHE_PFAD = PROJEKT_ROOT / "data" / "genres.json"
 STANDARD_VORSCHAU_WOCHEN = 8
 # Abgelaufene Startereignisse werden nach dieser Frist entsorgt.
 AUFRAEUM_TAGE = 30
+# Filme, die so lange nicht mehr im Abo lagen, fliegen aus dem Abo-Abgleich.
+ABO_AUFRAEUM_TAGE = 180
+
+
+def _abo_kataloge_abgleichen(api_key: str, anbieter_liste: list[dict], heute: date, logger) -> None:
+    """Liest die Abo-Kataloge der aktiven Anbieter (parallel, je eigene
+    Session) und gleicht sie mit dem Vorlauf ab - Grundlage fuer "Neu im Abo".
+    Jeder Anbieter zaehlt als eigene Quelle 'abo-<schluessel>': schlaegt einer
+    fehl, bleibt sein bisheriger Stand unangetastet."""
+    mit_id = [a for a in anbieter_liste if a.get("tmdb_provider_id")]
+    if not mit_id:
+        return
+    ab_erscheinung = heute - timedelta(days=ABO_RUECKBLICK_MONATE * 30)
+
+    def _lesen(anbieter: dict):
+        try:
+            return anbieter, hole_abo_filme(neue_session(), api_key, anbieter["tmdb_provider_id"], ab_erscheinung), None
+        except TmdbFehler as exc:
+            return anbieter, None, exc
+
+    with ThreadPoolExecutor(max_workers=len(mit_id)) as pool:
+        ergebnisse = list(pool.map(_lesen, mit_id))
+
+    for anbieter, filme, fehler in ergebnisse:
+        quelle = f"abo-{anbieter['schluessel']}"
+        if fehler is not None:
+            markiere_quelle_fehler(quelle, str(fehler))
+            logger.error("%s fehlgeschlagen: %s", quelle, fehler)
+            continue
+        ist_basis = not quelle_schon_erfolgreich(quelle)
+        speichere_titel(filme)
+        neu = speichere_abo_katalog(anbieter["schluessel"], [f.tmdb_id for f in filme], heute, ist_basis)
+        markiere_quelle_erfolg(quelle)
+        if ist_basis:
+            logger.info("%s: %d Filme im Abo - erster Abgleich, dient als Vergleichsbasis", quelle, len(filme))
+        else:
+            logger.info("%s: %d Filme im Abo, %d neu hinzugekommen", quelle, len(filme), neu)
 
 
 def _logging_einrichten() -> None:
@@ -182,6 +227,9 @@ def main() -> None:
         except TmdbFehler as exc:
             markiere_quelle_fehler("merkliste", str(exc))
             logger.error("merkliste fehlgeschlagen: %s", exc)
+
+    _abo_kataloge_abgleichen(api_key, [alle_anbieter[s] for s in aktive_anbieter], heute, logger)
+    raeume_abo_katalog_auf(heute - timedelta(days=ABO_AUFRAEUM_TAGE))
 
     entfernt = raeume_starts_auf(heute - timedelta(days=AUFRAEUM_TAGE))
     if entfernt:

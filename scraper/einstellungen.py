@@ -10,6 +10,11 @@ CONFIG_VORLAGE_PFAD = PROJEKT_ROOT / "config" / "einstellungen.default.json"
 ANBIETER_PFAD = PROJEKT_ROOT / "config" / "anbieter.json"
 API_SCHLUESSEL_PFAD = PROJEKT_ROOT / "config" / "config.json"
 
+# Eigene Termine an gemerkten Titeln (ab v1.7.0, Schluessel "eigene_termine")
+# duerfen ausser den Anbietern aus anbieter.json auch "Sonstiges" tragen - fuer
+# einen Start bei einem Dienst, den die App nicht kennt.
+EIGENER_TERMIN_SONSTIGES = "sonstiges"
+
 
 def lade_einstellungen(config_pfad: Path = CONFIG_PFAD) -> dict:
     """Laedt die aktiven Einstellungen. Existieren sie noch nicht (frische

@@ -56,6 +56,17 @@ CREATE TABLE IF NOT EXISTS starts (
 
 CREATE INDEX IF NOT EXISTS starts_datum ON starts (startdatum);
 
+-- Fuer "Neu im Abo" (ab v1.7.0): welcher Film wann zuerst im Abo-Katalog
+-- eines Anbieters auftauchte. erstmals_gesehen_am NULL = schon beim ersten
+-- Abgleich da (Vergleichsbasis), also nicht "neu".
+CREATE TABLE IF NOT EXISTS abo_katalog (
+    tmdb_id INTEGER NOT NULL,
+    anbieter TEXT NOT NULL,
+    erstmals_gesehen_am TEXT,
+    zuletzt_gesehen_am TEXT NOT NULL,
+    PRIMARY KEY (tmdb_id, anbieter)
+);
+
 CREATE TABLE IF NOT EXISTS quellen_status (
     quelle TEXT PRIMARY KEY,
     letzter_erfolg_am TEXT,
@@ -234,6 +245,74 @@ def raeume_starts_auf(vor_datum: date, db_pfad: Path = DB_PFAD) -> int:
             (vor_datum.isoformat(),),
         )
         return cur.rowcount
+
+
+def speichere_abo_katalog(
+    anbieter: str, tmdb_ids: list[int], heute: date, ist_basis: bool, db_pfad: Path = DB_PFAD
+) -> int:
+    """Gleicht den gerade gelesenen Abo-Katalog eines Anbieters ab und liefert,
+    wie viele Filme neu hinzugekommen sind.
+
+    Beim allerersten Abgleich (ist_basis) gibt es keinen Vorlauf - dann wird
+    alles ohne Erstmals-Datum eingetragen, sonst stuende nach dem Update der
+    komplette Katalog auf einmal als "neu" da. Ein schon bekannter Film behaelt
+    sein Erstmals-Datum, auch wenn er zwischenzeitlich aus den Daten fiel.
+    """
+    heute_iso = heute.isoformat()
+    erstmals = None if ist_basis else heute_iso
+    with closing(_verbindung(db_pfad)) as conn, conn:
+        vorher = conn.total_changes
+        conn.executemany(
+            """
+            INSERT INTO abo_katalog (tmdb_id, anbieter, erstmals_gesehen_am, zuletzt_gesehen_am)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(tmdb_id, anbieter) DO NOTHING
+            """,
+            [(tmdb_id, anbieter, erstmals, heute_iso) for tmdb_id in tmdb_ids],
+        )
+        neu = conn.total_changes - vorher
+        conn.executemany(
+            "UPDATE abo_katalog SET zuletzt_gesehen_am = ? WHERE tmdb_id = ? AND anbieter = ?",
+            [(heute_iso, tmdb_id, anbieter) for tmdb_id in tmdb_ids],
+        )
+    return 0 if ist_basis else neu
+
+
+def raeume_abo_katalog_auf(vor_datum: date, db_pfad: Path = DB_PFAD) -> int:
+    """Entfernt Filme, die schon lange nicht mehr im Abo lagen. Erst nach einer
+    langen Frist: faellt ein Titel nur ein paar Tage aus den Daten, soll er bei
+    seiner Rueckkehr nicht noch einmal als "neu" erscheinen."""
+    with closing(_verbindung(db_pfad)) as conn, conn:
+        cur = conn.execute("DELETE FROM abo_katalog WHERE zuletzt_gesehen_am < ?", (vor_datum.isoformat(),))
+        return cur.rowcount
+
+
+def hole_neu_im_abo(seit: date, db_pfad: Path = DB_PFAD) -> list[dict]:
+    """Filme, die seit 'seit' neu in einem Abo-Katalog auftauchten und beim
+    letzten Abgleich dieses Anbieters noch drin lagen - je Anbieter eine Zeile,
+    im Format von hole_starts_im_zeitraum (startdatum = Erstmals-Datum)."""
+    with closing(_verbindung(db_pfad)) as conn:
+        rows = conn.execute(
+            """
+            SELECT t.*, a.anbieter, a.erstmals_gesehen_am AS startdatum, 'abo' AS art, NULL AS staffel,
+                   a.erstmals_gesehen_am
+            FROM abo_katalog a
+            JOIN titel t ON t.tmdb_id = a.tmdb_id AND t.medientyp = 'film'
+            WHERE a.erstmals_gesehen_am >= ?
+              AND a.zuletzt_gesehen_am = (
+                  SELECT MAX(b.zuletzt_gesehen_am) FROM abo_katalog b WHERE b.anbieter = a.anbieter
+              )
+            ORDER BY a.erstmals_gesehen_am DESC
+            """,
+            (seit.isoformat(),),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def quelle_schon_erfolgreich(quelle: str, db_pfad: Path = DB_PFAD) -> bool:
+    with closing(_verbindung(db_pfad)) as conn:
+        row = conn.execute("SELECT letzter_erfolg_am FROM quellen_status WHERE quelle = ?", (quelle,)).fetchone()
+        return bool(row and row["letzter_erfolg_am"])
 
 
 def markiere_quelle_erfolg(quelle: str, db_pfad: Path = DB_PFAD) -> None:

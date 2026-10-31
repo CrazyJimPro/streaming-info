@@ -79,6 +79,44 @@
         {% endif %}
       </div>
 
+      {% if gemerkt %}
+      {# Fuer Starts, die TMDB nicht kennt - z.B. wenn ein Film ins Abo eines
+         Anbieters kommt. Setzen und Entfernen stehen nebeneinander. #}
+      <div class="eigener-termin">
+        <form method="post" action="{{ url_for('eigener_termin_setzen') }}" class="eigener-termin-formular">
+          <input type="hidden" name="tmdb_id" value="{{ tmdb_id }}">
+          <input type="hidden" name="medientyp" value="{{ medientyp }}">
+          <input type="hidden" name="weiter" value="{{ hier }}">
+          <label for="termin-datum">Eigener Termin</label>
+          <input type="date" id="termin-datum" name="datum" required
+                 value="{{ eigener_termin.datum if eigener_termin else '' }}">
+          <select name="anbieter" aria-label="Anbieter">
+            {% for a in termin_anbieter %}
+            <option value="{{ a.schluessel }}" {% if eigener_termin and eigener_termin.anbieter == a.schluessel %}selected{% endif %}>{{ a.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit">Speichern</button>
+        </form>
+        {% if eigener_termin %}
+        <form method="post" action="{{ url_for('eigener_termin_entfernen') }}">
+          <input type="hidden" name="tmdb_id" value="{{ tmdb_id }}">
+          <input type="hidden" name="medientyp" value="{{ medientyp }}">
+          <input type="hidden" name="weiter" value="{{ hier }}">
+          <button type="submit">Entfernen</button>
+        </form>
+        {% endif %}
+        <p class="abschnitt-hinweis">
+          {% if eigener_termin %}
+          Auf der Startseite gilt dein Termin statt dem von TMDB.
+          {% else %}
+          Kennst du einen Starttermin, den TMDB nicht führt &mdash; etwa wann ein Film ins Abo
+          von WOW oder Netflix kommt &mdash;, trag ihn hier ein. Er erscheint dann mit Countdown
+          in der Merkliste, im Streaming-Bereich und im Kalender.
+          {% endif %}
+        </p>
+      </div>
+      {% endif %}
+
       {% if daten.overview %}
       <p>{{ daten.overview }}</p>
       {% else %}

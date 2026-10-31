@@ -30,6 +30,7 @@ if str(PROJEKT_ROOT) not in sys.path:
 from flask import Flask, Response, jsonify, redirect, render_template, request, url_for  # noqa: E402
 
 from scraper.einstellungen import (  # noqa: E402
+    EIGENER_TERMIN_SONSTIGES,
     lade_anbieter,
     lade_api_schluessel,
     lade_einstellungen,
@@ -48,12 +49,14 @@ from scraper.sicherung import (  # noqa: E402
 from scraper.storage import (  # noqa: E402
     DB_PFAD,
     hole_merkliste_eintraege,
+    hole_neu_im_abo,
     hole_quellen_status,
     hole_starts_im_zeitraum,
     hole_vorkommende_sprachen,
     init_db,
 )
 from scraper.tmdb import (  # noqa: E402
+    MIN_POPULARITAET_ABO,
     MIN_POPULARITAET_DIGITAL,
     MIN_POPULARITAET_KINO,
     MIN_POPULARITAET_SERIE,
@@ -197,7 +200,9 @@ def _stand_zusammenfassen(status: list[dict], aktive: list[str], anbieter_karte:
     markiere_quelle_erfolg setzt den alten Fehlertext nicht zurueck."""
     namen = {s: a["name"] for s, a in anbieter_karte.items()}
     namen.update({"kino": "Kino", "digital": "Digital", "merkliste": "Merkliste"})
-    relevant = set(aktive) | {"kino", "digital", "merkliste"}
+    # Der Abo-Abgleich je Anbieter ("Neu im Abo") ist eine eigene Quelle.
+    namen.update({f"abo-{s}": f"{a['name']} (Abo)" for s, a in anbieter_karte.items()})
+    relevant = set(aktive) | {f"abo-{s}" for s in aktive} | {"kino", "digital", "merkliste"}
 
     aeltester: datetime | None = None
     fehler: list[dict] = []
@@ -371,7 +376,10 @@ def _merkliste_aufbereiten(zeilen: list[dict], heute: date) -> list[dict]:
         if datum:
             eintrag["start_lesbar"] = _datum_lesbar(datum)
             eintrag["countdown"] = _countdown_text(_tage_bis(datum, heute))
-            eintrag["zusatz"] = f"Staffel {eintrag['staffel']}" if eintrag.get("staffel") else ""
+            if eintrag.get("eigener_termin"):
+                eintrag["zusatz"] = "eigener Termin"
+            else:
+                eintrag["zusatz"] = f"Staffel {eintrag['staffel']}" if eintrag.get("staffel") else ""
         else:
             eintrag["start_lesbar"] = "Noch kein Termin bekannt"
             eintrag["countdown"] = ""
@@ -404,6 +412,78 @@ def _markiere_jetzt_verfuegbar(merkliste: list[dict], api_key: str, heute: date)
             for gruppe in bezug:
                 gruppe["anbieter"] = [{"name": n, "farbe": farben.get(n, "#6b7280")} for n in gruppe["anbieter"]]
         eintrag["jetzt_verfuegbar"] = bezug
+
+
+SONSTIGES_FARBE = "#6b7280"
+
+
+def _termin_anbieter_karte(anbieter_karte: dict[str, dict]) -> dict[str, dict]:
+    """Wofuer ein eigener Termin gelten kann: die Streaming-Anbieter in der
+    Reihenfolge von anbieter.json, dann Kino, dann "Sonstiges"."""
+    karte = {s: a for s, a in anbieter_karte.items() if s != "kino"}
+    if "kino" in anbieter_karte:
+        karte["kino"] = anbieter_karte["kino"]
+    karte[EIGENER_TERMIN_SONSTIGES] = {"schluessel": EIGENER_TERMIN_SONSTIGES, "name": "Sonstiges", "farbe": SONSTIGES_FARBE}
+    return karte
+
+
+def _eigener_termin(einstellungen: dict, tmdb_id: int, medientyp: str) -> dict | None:
+    return next(
+        (
+            t
+            for t in einstellungen.get("eigene_termine", [])
+            if t["tmdb_id"] == tmdb_id and t["medientyp"] == medientyp
+        ),
+        None,
+    )
+
+
+def _eigene_termine_anwenden(merkliste: list[dict], einstellungen: dict, anbieter_karte: dict) -> None:
+    """Ein von Hand eingetragener Termin gilt auf der Merkliste-Karte vor dem
+    TMDB-Termin - er ist ja genau dafuer da, wo TMDB nichts weiss (z.B. der
+    Abo-Start eines Films). Statt "gemerkt" traegt die Karte dann den Anbieter.
+    Muss vor _merkliste_aufbereiten laufen; ist der Termin vorbei, greift
+    danach wie sonst auch "Jetzt verfuegbar"."""
+    karte = _termin_anbieter_karte(anbieter_karte)
+    for eintrag in merkliste:
+        termin = _eigener_termin(einstellungen, eintrag["tmdb_id"], eintrag["medientyp"])
+        if not termin:
+            continue
+        anbieter = karte.get(termin["anbieter"], karte[EIGENER_TERMIN_SONSTIGES])
+        eintrag["startdatum"] = termin["datum"]
+        eintrag["staffel"] = None
+        eintrag["eigener_termin"] = True
+        eintrag["feste_farbe"], eintrag["festes_label"] = anbieter["farbe"], anbieter["name"]
+
+
+def _eigene_termine_im_zeitraum(einstellungen: dict, anbieter_karte: dict, heute: date, bis: date) -> list[dict]:
+    """Eigene Termine im Vorschau-Zeitraum als Start-Zeilen, damit sie auch im
+    Streaming-/Kino-Bereich, in der Wochenansicht und im Kalender stehen. Die
+    Daten kommen aus den Einstellungen - nach dem Speichern stimmt die Anzeige
+    sofort, ohne Scan."""
+    merkliste = einstellungen.get("merkliste", [])
+    zeilen = []
+    for termin in einstellungen.get("eigene_termine", []):
+        if not (heute.isoformat() <= termin["datum"] <= bis.isoformat()):
+            continue
+        gemerkt = [m for m in merkliste if m["tmdb_id"] == termin["tmdb_id"] and m["medientyp"] == termin["medientyp"]]
+        if not gemerkt:
+            continue
+        for zeile in hole_merkliste_eintraege(gemerkt, db_pfad=DB_PFAD):
+            zeilen.append(
+                {
+                    **zeile,
+                    "anbieter": termin["anbieter"],
+                    "startdatum": termin["datum"],
+                    "art": "eigen",
+                    "staffel": None,
+                    "erstmals_gesehen_am": None,
+                }
+            )
+    eintraege = _starts_aufbereiten(zeilen, _termin_anbieter_karte(anbieter_karte), heute)
+    for eintrag in eintraege:
+        eintrag["zusatz"] = "eigener Termin"
+    return eintraege
 
 
 def _abschnitte_laden(einstellungen: dict, anbieter_karte: dict, heute: date) -> tuple[list, list, list, date]:
@@ -439,7 +519,44 @@ def _abschnitte_laden(einstellungen: dict, anbieter_karte: dict, heute: date) ->
     for eintrag in digital:
         eintrag["feste_farbe"], eintrag["festes_label"] = DIGITAL_FARBE, "digital"
 
+    # Eigene Termine: ein Kinotermin zu den Kinostarts, alles andere zum
+    # Streaming - dort sortiert nach Datum mit hinein.
+    for eintrag in _eigene_termine_im_zeitraum(einstellungen, anbieter_karte, heute, bis):
+        if eintrag["anbieter_liste"][0]["schluessel"] == "kino":
+            eintrag["feste_farbe"], eintrag["festes_label"] = kino_farbe, "Kino"
+            kino.append(eintrag)
+        else:
+            streaming.append(eintrag)
+    streaming.sort(key=lambda e: e["startdatum"])
+    kino.sort(key=lambda e: e["startdatum"])
+
     return streaming, kino, digital, bis
+
+
+NEU_IM_ABO_TAGE = 14
+
+
+def _neu_im_abo(einstellungen: dict, anbieter_karte: dict, heute: date) -> list[dict]:
+    """Filme, die in den letzten 14 Tagen neu ins Abo eines aktiven Anbieters
+    kamen - rueckblickend, weil TMDB solche Abo-Starts nicht vorher ankuendigt
+    (siehe scraper/tmdb.py, Abschnitt "Neu im Abo"). Gefiltert wie die
+    uebrigen Abschnitte, dazu die eigene Popularitaetsschwelle, die beim
+    Einlesen bewusst noch nicht greift."""
+    aktive = set(einstellungen.get("aktive_anbieter", []))
+    zeilen = [
+        z
+        for z in hole_neu_im_abo(heute - timedelta(days=NEU_IM_ABO_TAGE), db_pfad=DB_PFAD)
+        if z["anbieter"] in aktive and (z.get("popularitaet") or 0) >= MIN_POPULARITAET_ABO
+    ]
+    # Am selben Tag bei zwei Anbietern -> eine Karte mit zwei Badges, das
+    # erledigt _starts_aufbereiten ueber (Titel, Datum).
+    eintraege = _starts_aufbereiten(filtere_zeilen(zeilen, einstellungen), anbieter_karte, heute)
+    for eintrag in eintraege:
+        tage = (heute - datetime.strptime(eintrag["startdatum"], "%Y-%m-%d").date()).days
+        eintrag["countdown"] = "seit heute" if tage <= 0 else "seit gestern" if tage == 1 else f"seit {tage} Tagen"
+        eintrag["zusatz"] = "neu im Abo"
+    eintraege.sort(key=lambda e: e["startdatum"], reverse=True)
+    return eintraege
 
 
 TMDB_BACKDROP_BASIS = "https://image.tmdb.org/t/p/w1280"
@@ -549,14 +666,17 @@ def index():
     anbieter_karte = _anbieter_karte()
     heute = date.today()
     streaming, kino, digital, bis = _abschnitte_laden(einstellungen, anbieter_karte, heute)
+    neu_im_abo = _neu_im_abo(einstellungen, anbieter_karte, heute)
     zeitraum_wochen = einstellungen.get("zeitraum_wochen", 8)
 
     # Merkliste bewusst ungefiltert und ohne Zeitraumgrenze: gemerkt ist
     # gemerkt. Auch Titel ohne bekannten Termin bleiben sichtbar, sonst wirkt
     # das Merken wie wirkungslos.
-    merkliste = _merkliste_aufbereiten(
-        hole_merkliste_eintraege(einstellungen.get("merkliste", []), db_pfad=DB_PFAD), heute
-    )
+    merkliste = hole_merkliste_eintraege(einstellungen.get("merkliste", []), db_pfad=DB_PFAD)
+    _eigene_termine_anwenden(merkliste, einstellungen, anbieter_karte)
+    # Ein eigener Termin kann die Reihenfolge aendern (frueher oder neu datiert).
+    merkliste.sort(key=lambda e: (e.get("startdatum") is None, e.get("startdatum") or ""))
+    merkliste = _merkliste_aufbereiten(merkliste, heute)
     api_key = lade_api_schluessel()
     _markiere_jetzt_verfuegbar(merkliste, api_key, heute)
 
@@ -588,8 +708,10 @@ def index():
         digital=digital,
         kino=kino,
         merkliste=merkliste,
+        neu_im_abo=neu_im_abo,
+        neu_im_abo_tage=NEU_IM_ABO_TAGE,
         schnellfilter_quellen=_schnellfilter_quellen(
-            einstellungen.get("aktive_anbieter", []), anbieter_karte, [streaming, kino, digital]
+            einstellungen.get("aktive_anbieter", []), anbieter_karte, [streaming, kino, digital, neu_im_abo]
         ),
         gemerkt_ids={(m["tmdb_id"], m["medientyp"]) for m in einstellungen.get("merkliste", [])},
         stand=stand,
@@ -696,6 +818,9 @@ def einstellungen_seite():
         # Formular uebernehmen (siehe webapp/static/einstellungen.js).
         daten["merkliste"] = _liste_aus_formular("merk")
         daten["ausgeblendet"] = _liste_aus_formular("ausblend")
+        # Eigene Termine stehen bewusst nicht im Formular und bleiben - nur
+        # die von hier entfernten gemerkten Titel nehmen ihren Termin mit.
+        daten["eigene_termine"] = _termine_der_merkliste(daten)
 
         api_schluessel = request.form.get("tmdb_api_key", "").strip()
         if api_schluessel:
@@ -900,6 +1025,9 @@ def details(medientyp, tmdb_id):
         tmdb_id=tmdb_id,
         gemerkt=gemerkt,
         ausgeblendet=ausgeblendet,
+        eigener_termin=_eigener_termin(einstellungen, tmdb_id, medientyp) if gemerkt else None,
+        termin_anbieter=list(_termin_anbieter_karte(_anbieter_karte()).values()),
+        heute=date.today(),
         hier=url_for("details", medientyp=medientyp, tmdb_id=tmdb_id, zurueck=zurueck),
     )
 
@@ -951,10 +1079,67 @@ def entmerken():
     ]
     if len(behalten) != len(daten.get("merkliste", [])):
         daten["merkliste"] = behalten
+        # Ein eigener Termin haengt am gemerkten Titel - ohne ihn waere er
+        # unsichtbar und liesse sich nirgends mehr entfernen.
+        daten["eigene_termine"] = _termine_der_merkliste(daten)
         speichere_einstellungen(daten)
     suchtext = request.form.get("q")
     weiter = _lokales_ziel(request.form.get("weiter"))
     return redirect(weiter or (url_for("suche", q=suchtext) if suchtext else url_for("index")))
+
+
+def _termine_der_merkliste(daten: dict) -> list[dict]:
+    """Die eigenen Termine, deren Titel noch auf der Merkliste steht."""
+    gemerkt = {(m["tmdb_id"], m["medientyp"]) for m in daten.get("merkliste", [])}
+    return [t for t in daten.get("eigene_termine", []) if (t["tmdb_id"], t["medientyp"]) in gemerkt]
+
+
+@app.route("/eigener-termin", methods=["POST"])
+def eigener_termin_setzen():
+    """Traegt fuer einen gemerkten Titel einen Termin von Hand ein (Formular
+    auf der Detailseite) - fuer Starts, die TMDB nicht kennt, etwa wenn ein
+    Film ins Abo eines Anbieters kommt. Ein schon vorhandener Termin desselben
+    Titels wird ersetzt. Nur fuer gemerkte Titel: dort wird er angezeigt und
+    dort laesst er sich auch wieder entfernen."""
+    weiter = _lokales_ziel(request.form.get("weiter")) or url_for("index")
+    try:
+        tmdb_id = int(request.form["tmdb_id"])
+        datum = datetime.strptime(request.form.get("datum", ""), "%Y-%m-%d").date().isoformat()
+    except (KeyError, ValueError):
+        return redirect(weiter)
+    medientyp = request.form.get("medientyp")
+    anbieter = request.form.get("anbieter", "")
+    if anbieter not in _termin_anbieter_karte(_anbieter_karte()):
+        return redirect(weiter)
+    daten = lade_einstellungen()
+    if not any(m["tmdb_id"] == tmdb_id and m["medientyp"] == medientyp for m in daten.get("merkliste", [])):
+        return redirect(weiter)
+    termine = [
+        t for t in daten.get("eigene_termine", []) if not (t["tmdb_id"] == tmdb_id and t["medientyp"] == medientyp)
+    ]
+    termine.append({"tmdb_id": tmdb_id, "medientyp": medientyp, "datum": datum, "anbieter": anbieter})
+    daten["eigene_termine"] = termine
+    speichere_einstellungen(daten)
+    return redirect(weiter)
+
+
+@app.route("/eigener-termin/entfernen", methods=["POST"])
+def eigener_termin_entfernen():
+    """Gegenstueck zu /eigener-termin - danach gilt wieder, was TMDB weiss.
+    Idempotent: ohne Termin passiert einfach nichts."""
+    weiter = _lokales_ziel(request.form.get("weiter")) or url_for("index")
+    try:
+        tmdb_id = int(request.form["tmdb_id"])
+    except (KeyError, ValueError):
+        return redirect(weiter)
+    medientyp = request.form.get("medientyp")
+    daten = lade_einstellungen()
+    termine = daten.get("eigene_termine", [])
+    behalten = [t for t in termine if not (t["tmdb_id"] == tmdb_id and t["medientyp"] == medientyp)]
+    if len(behalten) != len(termine):
+        daten["eigene_termine"] = behalten
+        speichere_einstellungen(daten)
+    return redirect(weiter)
 
 
 @app.route("/ausblenden", methods=["POST"])
