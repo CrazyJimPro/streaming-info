@@ -326,6 +326,17 @@ def _trailer_url(titel: str) -> str:
     return f"https://www.youtube.com/@{TRAILER_KANAL}/search?query={query}"
 
 
+# Abo-Starts bei WOW kennt weder TMDB noch JustWatch vorher (siehe
+# hole_abo_filme) - Sky zeigt neue Filme aber am selben Tag auf Sky Cinema,
+# und das TV-Programm steht 1-3 Wochen im Voraus fest. Die TV-Termin-Suche von
+# prisma.de fand "Michael" (06.11.2026, Sky Cinema) als einzige der geprueften
+# Suchen; TV Spielfilm fuehrt dort nur Mediatheken. Nur ein Link fuer den
+# Nutzer: prisma untersagt automatisches Auslesen (robots.txt), die App ruft
+# die Seite deshalb nie selbst ab.
+def _tv_programm_url(titel: str) -> str:
+    return f"https://www.prisma.de/suche/?q={quote_plus(titel)}&type=tvDisplay"
+
+
 def _lokales_ziel(ziel: str | None) -> str | None:
     """Ein Ruecksprungziel aus Formular oder Referer, aber nur innerhalb der
     App: volle URLs werden auf Pfad+Query gekuerzt, wenn sie auf diese App
@@ -1000,6 +1011,7 @@ def details(medientyp, tmdb_id):
             daten = hole_details(neue_session(), api_key, medientyp, tmdb_id)
             daten["poster_url"] = _poster_url(daten.get("poster_pfad"))
             daten["trailer_url"] = _trailer_url(daten["titel"] or "")
+            daten["tv_programm_url"] = _tv_programm_url(daten["titel"] or "")
         except TmdbFehler as exc:
             fehler = f"Die Details ließen sich gerade nicht abrufen: {exc}"
     # Der Zurueck-Knopf soll auch nach Merken/Entmerken auf dieser Seite noch

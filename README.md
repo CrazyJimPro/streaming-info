@@ -453,6 +453,13 @@ aber bei TMDB stehen für Deutschland nur der Kinostart, der Kauf-/Leihstart und
 die Blu-ray. Liest du so einen Termin irgendwo (Presse, Anbieter-Newsletter),
 trag ihn selbst ein.
 
+**WOW-Termine findest du im TV-Programm:** Neue Filme laufen bei Sky Cinema am
+selben Tag an wie bei WOW, und das Fernsehprogramm steht 1–3 Wochen vorher fest.
+Auf jeder Detailseite öffnet der Knopf **„📺 Im TV-Programm“** die Suche nach
+den nächsten TV-Terminen des Titels bei prisma.de. „Michael“ steht dort z. B.
+mit „06.11.2026, 20:15“ auf Sky Cinema. Die App selbst liest prisma.de nicht
+aus, das untersagt die Seite – der Knopf ist nur eine Abkürzung für dich.
+
 ### So geht's
 
 1. Den Titel **merken** (Stern ☆ auf der Karte, über die Suche oder in den
@@ -692,7 +699,8 @@ ist er vermutlich nicht gespeichert: nach dem Hinzufügen muss unten
 
 Kommt ein schon erschienener Kinofilm ins Abo (z. B. „Michael“ am 06.11.2026 zu
 WOW), kennt TMDB diesen Termin für Deutschland in aller Regel nicht. Vorab hilft
-nur ein [eigener Termin](#eigener-termin). Ab dem Starttag erscheint der Film
+nur ein [eigener Termin](#eigener-termin); den WOW-Termin zeigt der Knopf
+„📺 Im TV-Programm“ auf der Detailseite (Sky-Cinema-Ausstrahlung). Ab dem Starttag erscheint der Film
 von selbst unter [Neu im Abo](#neu-im-abo), sofern er nicht älter als 18 Monate
 ist und WOW in den Einstellungen angehakt ist.
 

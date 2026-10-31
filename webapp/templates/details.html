@@ -45,6 +45,8 @@
 
       <div class="details-aktionen">
         <a class="knopf primaer" href="{{ daten.trailer_url }}" target="_blank" rel="noopener">▶ Trailer</a>
+        <a class="knopf" href="{{ daten.tv_programm_url }}" target="_blank" rel="noopener"
+           title="Sucht die nächsten TV-Termine bei prisma.de – neue Filme laufen bei Sky Cinema am selben Tag an wie bei WOW">📺 Im TV-Programm</a>
         {% if gemerkt %}
         <form method="post" action="{{ url_for('entmerken') }}">
           <input type="hidden" name="tmdb_id" value="{{ tmdb_id }}">
@@ -113,6 +115,8 @@
           von WOW oder Netflix kommt &mdash;, trag ihn hier ein. Er erscheint dann mit Countdown
           in der Merkliste, im Streaming-Bereich und im Kalender.
           {% endif %}
+          Den WOW-Start findest du über „📺 Im TV-Programm“: Neue Filme laufen bei Sky Cinema
+          am selben Tag an, das Programm steht 1–3 Wochen vorher fest.
         </p>
       </div>
       {% endif %}
