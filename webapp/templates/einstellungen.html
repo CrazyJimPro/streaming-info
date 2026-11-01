@@ -86,46 +86,63 @@
 
     <div class="einstellungen-block">
       <h2>Streaming-Anbieter</h2>
-      <div class="anbieter-grid">
+      <p class="hinweis">Antippen zum An- und Abwählen; angewählte leuchten in ihrer Farbe.</p>
+      {# Chips: die Checkbox steckt im Label und ist nur optisch versteckt -
+         Tastatur (Tab, Leertaste) und Formular funktionieren wie vorher. #}
+      <div class="chip-gruppe">
         {% for a in anbieter %}
           {% if a.schluessel != "kino" %}
-          <div class="checkbox-zeile">
-            <input type="checkbox" id="anbieter-{{ a.schluessel }}" name="aktive_anbieter" value="{{ a.schluessel }}"
+          <label class="chip chip-anbieter" style="--chip-farbe: {{ a.farbe }}">
+            <input type="checkbox" name="aktive_anbieter" value="{{ a.schluessel }}"
                    {{ "checked" if a.schluessel in einstellungen.aktive_anbieter else "" }}>
             <span class="farb-punkt" style="background:{{ a.farbe }}"></span>
-            <label for="anbieter-{{ a.schluessel }}">{{ a.name }}</label>
-          </div>
+            <span class="chip-text">{{ a.name }}</span>
+          </label>
           {% endif %}
         {% endfor %}
       </div>
     </div>
 
     <div class="einstellungen-block">
-      <h2>Genres</h2>
-      <p class="hinweis">Kein Häkchen gesetzt = alle Genres werden angezeigt.</p>
-      <div class="genre-grid">
+      <div class="block-kopf">
+        <h2>Genres</h2>
+        <span class="auswahl-zaehler hinweis" data-zaehler-fuer="auswahl-genres"></span>
+        <span class="auswahl-knoepfe">
+          <button type="button" class="auswahl-knopf" data-alle="auswahl-genres">Alle</button>
+          <button type="button" class="auswahl-knopf" data-keine="auswahl-genres">Keine</button>
+        </span>
+      </div>
+      <p class="hinweis">Nichts angewählt = alle Genres werden angezeigt.</p>
+      <div class="chip-gruppe" id="auswahl-genres">
         {% for genre_id, name in genres %}
-        <div class="checkbox-zeile">
-          <input type="checkbox" id="genre-{{ genre_id }}" name="aktive_genres" value="{{ genre_id }}"
+        <label class="chip">
+          <input type="checkbox" name="aktive_genres" value="{{ genre_id }}"
                  {{ "checked" if genre_id in einstellungen.aktive_genres else "" }}>
-          <label for="genre-{{ genre_id }}">{{ name }}</label>
-        </div>
+          <span class="chip-text">{{ name }}</span>
+        </label>
         {% endfor %}
       </div>
     </div>
 
     <div class="einstellungen-block">
-      <h2>Originalsprachen</h2>
-      <p class="hinweis">Kein Häkchen gesetzt = alle Sprachen werden angezeigt. Die Zahl in Klammern
+      <div class="block-kopf">
+        <h2>Originalsprachen</h2>
+        <span class="auswahl-zaehler hinweis" data-zaehler-fuer="auswahl-sprachen"></span>
+        <span class="auswahl-knoepfe">
+          <button type="button" class="auswahl-knopf" data-alle="auswahl-sprachen">Alle</button>
+          <button type="button" class="auswahl-knopf" data-keine="auswahl-sprachen">Keine</button>
+        </span>
+      </div>
+      <p class="hinweis">Nichts angewählt = alle Sprachen werden angezeigt. Die kleine Zahl
         sagt, wie viele bevorstehende Titel gerade in dieser Sprache gedreht sind.
         Gemerkte Titel erscheinen immer, egal in welcher Sprache.</p>
-      <div class="genre-grid">
+      <div class="chip-gruppe" id="auswahl-sprachen">
         {% for s in sprachen %}
-        <div class="checkbox-zeile">
-          <input type="checkbox" id="sprache-{{ s.code }}" name="sprachen" value="{{ s.code }}"
+        <label class="chip">
+          <input type="checkbox" name="sprachen" value="{{ s.code }}"
                  {{ "checked" if s.code in einstellungen.get("sprachen", []) else "" }}>
-          <label for="sprache-{{ s.code }}">{{ s.name }}{% if s.anzahl %} <span class="hinweis">({{ s.anzahl }})</span>{% endif %}</label>
-        </div>
+          <span class="chip-text">{{ s.name }}</span>{% if s.anzahl %}<span class="chip-zahl">{{ s.anzahl }}</span>{% endif %}
+        </label>
         {% endfor %}
       </div>
     </div>

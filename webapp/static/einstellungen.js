@@ -183,6 +183,35 @@
 
   sucheEinrichten("merk-suche", "merk-ergebnisse", "merk-liste", "merk");
 
+  // Genres/Sprachen: Zaehler neben der Ueberschrift und Alle/Keine. Leer
+  // heisst beim Filtern "alle" - das sagt der Zaehler dann auch so.
+  document.querySelectorAll("[data-zaehler-fuer]").forEach(function (zaehler) {
+    var gruppe = document.getElementById(zaehler.getAttribute("data-zaehler-fuer"));
+    if (!gruppe) return;
+    var kaestchen = gruppe.querySelectorAll('input[type="checkbox"]');
+
+    function aktualisieren() {
+      var gewaehlt = gruppe.querySelectorAll('input[type="checkbox"]:checked').length;
+      zaehler.textContent = gewaehlt === 0
+        ? "nichts angewählt = alle"
+        : gewaehlt + " von " + kaestchen.length + " angewählt";
+    }
+
+    function alleSetzen(an) {
+      kaestchen.forEach(function (k) { k.checked = an; });
+      // Ein change genuegt, damit Zaehler und Speichern-Leiste nachziehen.
+      if (kaestchen.length) kaestchen[0].dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    gruppe.addEventListener("change", aktualisieren);
+    var id = gruppe.id;
+    var alle = document.querySelector('[data-alle="' + id + '"]');
+    var keine = document.querySelector('[data-keine="' + id + '"]');
+    if (alle) alle.addEventListener("click", function () { alleSetzen(true); });
+    if (keine) keine.addEventListener("click", function () { alleSetzen(false); });
+    aktualisieren();
+  });
+
   // Abo-Adresse des Kalenders kopieren. navigator.clipboard gibt es nur in
   // "sicheren" Seiten (https oder localhost) - wer die App per Netzwerk-IP
   // aufruft, bekommt deshalb den alten execCommand-Weg.

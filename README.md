@@ -597,12 +597,18 @@ unten auf der Seite. **„Verwerfen"** in der Leiste nimmt alle offenen
 - **Vorschau-Zeitraum** — wie viele Wochen im Voraus angezeigt werden.
   Je weiter, desto mehr steht drin; sehr weit im Voraus wird allerdings nur
   noch wenig angekündigt.
+Anbieter, Genres und Sprachen stehen als kleine Schilder („Chips") da: einmal
+antippen wählt an (✓, farbig hinterlegt), noch einmal antippen wählt ab.
+Angewählte Anbieter leuchten in ihrer Farbe.
+
 - **Streaming-Anbieter** — welche der sieben Anbieter überhaupt abgefragt
-  werden. Wer kein Paramount+ hat, nimmt das Häkchen einfach raus.
-- **Genres** — Einschränkung auf bestimmte Genres. **Kein Häkchen = alle
-  Genres.**
+  werden. Wer kein Paramount+ hat, tippt dessen Chip einfach an, bis er grau ist.
+- **Genres** — Einschränkung auf bestimmte Genres. **Nichts angewählt = alle
+  Genres.** Neben der Überschrift steht, wie viele angewählt sind; **„Alle"**
+  und **„Keine"** wählen alles auf einmal an oder ab.
 - **Originalsprachen** — nur Titel zeigen, die in bestimmten Sprachen gedreht
-  sind. **Kein Häkchen = alle Sprachen.** Siehe nächster Abschnitt.
+  sind. **Nichts angewählt = alle Sprachen.** Zähler, „Alle" und „Keine" wie bei
+  den Genres. Siehe nächster Abschnitt.
 - **TMDB-API-Schlüssel** — zum Ändern einen neuen eintragen. Lässt du das Feld
   leer, bleibt der bisherige erhalten.
 
@@ -614,10 +620,10 @@ auszublenden, kannst du die Übersicht auf bestimmte Sprachen beschränken:
 
 1. Oben rechts auf **„Einstellungen"**.
 2. Zum Block **„Originalsprachen"** scrollen.
-3. Die Sprachen anhaken, die du sehen willst — meist **Deutsch** und
-   **Englisch**. Die Zahl in Klammern zeigt, wie viele bevorstehende Titel
+3. Die Sprachen antippen, die du sehen willst — meist **Deutsch** und
+   **Englisch**. Die kleine Zahl im Chip zeigt, wie viele bevorstehende Titel
    gerade in dieser Sprache gedreht sind.
-4. Unten auf **„Speichern"**. Die Übersicht zeigt danach nur noch Titel in den
+4. Auf **„Speichern"**. Die Übersicht zeigt danach nur noch Titel in den
    gewählten Sprachen.
 
 Gut zu wissen:
@@ -625,7 +631,7 @@ Gut zu wissen:
 - Es zählt die **Originalsprache**, nicht die Synchronisation. Eine
   koreanische Netflix-Serie mit deutscher Tonspur ist „Koreanisch".
 - **Gemerkte Titel** erscheinen immer, egal in welcher Sprache.
-- Zum Zurücknehmen alle Häkchen entfernen und speichern.
+- Zum Zurücknehmen auf **„Keine"** tippen und speichern.
 - Direkt nach dem Update auf v0.8.0 kennt das Tool die Sprachen erst nach dem
   ersten Abruf. Der läuft beim Start ohnehin, bis dahin wird nichts
   weggefiltert.
@@ -695,8 +701,8 @@ erscheinen, falls noch ein Paket nachinstalliert werden muss. Wird ein
 
 - Ist der **TMDB-Schlüssel** eingetragen? Fehlt er, steht oben ein Hinweis.
 - Ist der **Vorschau-Zeitraum** sehr kurz? Probiere 8 oder 10 Wochen.
-- Sind alle **Genres** abgewählt bis auf wenige? Kein Häkchen = alle.
-- Sind nur wenige **Originalsprachen** angehakt? Kein Häkchen = alle.
+- Sind alle **Genres** abgewählt bis auf wenige? Nichts angewählt = alle.
+- Sind nur wenige **Originalsprachen** angewählt? Nichts angewählt = alle.
 - Steht oben unter dem Titel **„⚠ Fehler bei …"**? Dann kam der Abruf bei
   diesen Anbietern nicht durch — meist ein Netzwerkproblem. Einmal auf **↻**
   daneben klicken. Den genauen Fehler zeigt der Tooltip, wenn du mit der Maus
