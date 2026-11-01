@@ -1045,6 +1045,38 @@ input[type="file"] {
   margin-bottom: 0.8rem;
   color: var(--fg);
   max-width: 30rem;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+/* Der "Datei auswaehlen"-Knopf im Stil von .knopf statt im Browser-Look. */
+input[type="file"]::file-selector-button {
+  font: inherit;
+  margin-right: 0.8rem;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+input[type="file"]::file-selector-button:hover { opacity: 0.85; }
+
+/* Sprungleiste oben auf der Einstellungsseite. */
+.sprungleiste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1.25rem;
+}
+
+.sprungleiste .knopf { font-size: 0.82rem; padding: 0.3rem 0.85rem; }
+
+.einstellungen-block[id] { scroll-margin-top: 1rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.sprungleiste) { scroll-behavior: smooth; }
 }
 
 /* Pfeil "nach oben" unten rechts auf der Startseite (siehe nach-oben im

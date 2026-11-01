@@ -126,7 +126,9 @@ Schlüssel aus Schritt 1.
 
 1. Oben rechts auf **„Einstellungen"** klicken.
 2. Ganz oben im Feld **TMDB-API-Schlüssel** den Schlüssel einfügen.
-3. Unten auf **„Speichern"** klicken.
+3. Auf **„Speichern"** klicken (in der Leiste, die unten im Bild erscheint).
+   Danach wandert der Schlüssel-Block ans Ende der Seite, weil er nur noch
+   zum Ändern gebraucht wird.
 
 Die Daten werden danach automatisch im Hintergrund geholt (ein paar
 Sekunden), und die Übersicht füllt sich von selbst. **Fertig eingerichtet.**
@@ -594,13 +596,15 @@ klicken, entweder in der Leiste, die dann unten im Bild erscheint, oder ganz
 unten auf der Seite. **„Verwerfen"** in der Leiste nimmt alle offenen
 Änderungen zurück. Jede Speicherung holt die Daten sofort neu.
 
-- **Vorschau-Zeitraum** — wie viele Wochen im Voraus angezeigt werden.
-  Je weiter, desto mehr steht drin; sehr weit im Voraus wird allerdings nur
-  noch wenig angekündigt.
+Oben auf der Seite führt eine **Sprungleiste** direkt zu den Abschnitten
+(Anzeige · Merkliste · Ausgeblendet · Kalender · Sicherung · TMDB-Schlüssel).
 Anbieter, Genres und Sprachen stehen als kleine Schilder („Chips") da: einmal
 antippen wählt an (✓, farbig hinterlegt), noch einmal antippen wählt ab.
 Angewählte Anbieter leuchten in ihrer Farbe.
 
+- **Vorschau-Zeitraum** — wie viele Wochen im Voraus angezeigt werden.
+  Je weiter, desto mehr steht drin; sehr weit im Voraus wird allerdings nur
+  noch wenig angekündigt.
 - **Streaming-Anbieter** — welche der sieben Anbieter überhaupt abgefragt
   werden. Wer kein Paramount+ hat, tippt dessen Chip einfach an, bis er grau ist.
 - **Genres** — Einschränkung auf bestimmte Genres. **Nichts angewählt = alle
@@ -609,8 +613,9 @@ Angewählte Anbieter leuchten in ihrer Farbe.
 - **Originalsprachen** — nur Titel zeigen, die in bestimmten Sprachen gedreht
   sind. **Nichts angewählt = alle Sprachen.** Zähler, „Alle" und „Keine" wie bei
   den Genres. Siehe nächster Abschnitt.
-- **TMDB-API-Schlüssel** — zum Ändern einen neuen eintragen. Lässt du das Feld
-  leer, bleibt der bisherige erhalten.
+- **TMDB-API-Schlüssel** — steht ganz unten auf der Seite, sobald einer
+  hinterlegt ist (ohne Schlüssel ganz oben). Zum Ändern einen neuen eintragen
+  und speichern. Lässt du das Feld leer, bleibt der bisherige erhalten.
 
 ### Fremdsprachige Titel ausblenden (Sprachfilter)
 

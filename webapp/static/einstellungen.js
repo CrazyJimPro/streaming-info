@@ -20,9 +20,15 @@
     leiste.hidden = formularStand() === ausgangsStand;
   }
 
+  // Am Dokument statt am Formular lauschen: das Feld fuer den TMDB-Schluessel
+  // steht ausserhalb des <form> (per form="..." angehaengt), seine Ereignisse
+  // kaemen dort nie an.
+  function gehoertZumFormular(ereignis) {
+    return ereignis.target && ereignis.target.form === formular;
+  }
   if (formular) {
-    formular.addEventListener("input", pruefeAenderungen);
-    formular.addEventListener("change", pruefeAenderungen);
+    document.addEventListener("input", function (e) { if (gehoertZumFormular(e)) pruefeAenderungen(); });
+    document.addEventListener("change", function (e) { if (gehoertZumFormular(e)) pruefeAenderungen(); });
     formular.addEventListener("submit", function () { wirdGespeichert = true; });
   }
   window.addEventListener("beforeunload", function (ereignis) {

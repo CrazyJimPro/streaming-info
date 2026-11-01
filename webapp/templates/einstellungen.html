@@ -60,18 +60,35 @@
   <div class="fehler-hinweis">{{ fehler }}</div>
   {% endif %}
 
+  <nav class="sprungleiste" aria-label="Abschnitte">
+    <a class="knopf" href="#anzeige">Anzeige</a>
+    <a class="knopf" href="#merkliste">Merkliste</a>
+    <a class="knopf" href="#ausgeblendet">Ausgeblendet</a>
+    <a class="knopf" href="#kalender">Kalender</a>
+    <a class="knopf" href="#sicherung">Sicherung</a>
+    <a class="knopf" href="#tmdb-schluessel">TMDB-Schlüssel</a>
+  </nav>
+
+  {# Den Schluessel braucht man einmal bei der Einrichtung - fehlt er, steht
+     der Block als Schritt 1 ganz oben, sonst ganz unten. Er liegt dabei
+     ausserhalb des <form>; das Feld haengt per form="..." trotzdem dran. #}
+  {% macro tmdb_block() %}
+  <div class="einstellungen-block" id="tmdb-schluessel">
+    <h2>TMDB-API-Schlüssel</h2>
+    <p class="hinweis">
+      {% if api_schluessel_vorhanden %}Ein Schlüssel ist hinterlegt. Zum Ändern hier einen neuen eintragen und speichern.{% else %}Noch kein Schlüssel hinterlegt.{% endif %}
+      Kostenlos erhältlich auf <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org</a>.
+    </p>
+    <input type="password" name="tmdb_api_key" form="einstellungen-formular" aria-label="TMDB-API-Schlüssel"
+           placeholder="{{ 'bereits hinterlegt – leer lassen, um ihn zu behalten' if api_schluessel_vorhanden else 'TMDB-API-Schlüssel einfügen' }}" autocomplete="off">
+  </div>
+  {% endmacro %}
+
+  {% if not api_schluessel_vorhanden %}{{ tmdb_block() }}{% endif %}
+
   <form method="post" action="{{ url_for('einstellungen_seite') }}" id="einstellungen-formular">
 
-    <div class="einstellungen-block">
-      <h2>TMDB-API-Schlüssel</h2>
-      <p class="hinweis">
-        {% if api_schluessel_vorhanden %}Ein Schlüssel ist hinterlegt. Zum Ändern hier einen neuen eintragen.{% else %}Noch kein Schlüssel hinterlegt.{% endif %}
-        Kostenlos erhältlich auf <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org</a>.
-      </p>
-      <input type="password" name="tmdb_api_key" placeholder="{{ 'bereits hinterlegt – leer lassen, um ihn zu behalten' if api_schluessel_vorhanden else 'TMDB-API-Schlüssel einfügen' }}" autocomplete="off">
-    </div>
-
-    <div class="einstellungen-block">
+    <div class="einstellungen-block" id="anzeige">
       <h2>Vorschau-Zeitraum</h2>
       <div class="zeitraum-feld">
         <label for="zeitraum_wochen">Wie viele Wochen im Voraus anzeigen:</label>
@@ -147,7 +164,7 @@
       </div>
     </div>
 
-    <div class="einstellungen-block">
+    <div class="einstellungen-block" id="merkliste">
       <h2>Merkliste</h2>
       <p class="hinweis">Titel hier werden immer angezeigt, auch wenn ihr Genre oder ihre Sprache nicht ausgewählt ist.
         Ein Klick auf den Titel öffnet seine Detailseite, dort lässt sich auch ein eigener Termin eintragen.
@@ -162,7 +179,7 @@
       </p>
     </div>
 
-    <div class="einstellungen-block">
+    <div class="einstellungen-block" id="ausgeblendet">
       <h2>Ausgeblendete Titel</h2>
       <p class="hinweis">Über den „Ausblenden“-Knopf auf der Übersichtsseite hinzugefügt. Hier wieder entfernen, um einen Titel erneut anzuzeigen.</p>
       <table class="merkliste-tabelle" id="ausblend-liste">
@@ -208,7 +225,7 @@
     </div>
   </div>
 
-  <div class="einstellungen-block">
+  <div class="einstellungen-block" id="sicherung">
     <h2>Sicherung</h2>
     <p class="hinweis">
       Gesichert werden Merkliste samt eigenen Terminen, ausgeblendete Titel, Zeitraum, Anbieter-,
@@ -239,6 +256,8 @@
       <button class="knopf" type="submit">Sicherung einspielen</button>
     </form>
   </div>
+
+  {% if api_schluessel_vorhanden %}{{ tmdb_block() }}{% endif %}
 
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
   <script src="{{ url_for('static', filename='einstellungen.js') }}"></script>
