@@ -266,6 +266,12 @@ button.primaer, .knopf.primaer {
 
 .rueckgaengig-leiste button { padding: 0.35rem 0.9rem; font-size: 0.85rem; }
 
+.speichern-leiste[hidden] { display: none; }
+
+/* Damit die schwebende Leiste den Speichern-Knopf und die letzten Bloecke
+   nicht verdeckt, wenn man ganz nach unten scrollt. */
+body:has(.speichern-leiste:not([hidden])) { padding-bottom: 5rem; }
+
 .details-aktionen form .leer-hinweis { margin-right: 0.4rem; }
 
 .scan-hinweis.fehler { border-color: var(--danger-border); color: var(--danger-fg); }

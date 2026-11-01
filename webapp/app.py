@@ -820,7 +820,13 @@ def einstellungen_seite():
         genres = {int(k): v for k, v in roh.items()}
 
     if request.method == "POST":
-        daten["zeitraum_wochen"] = max(1, int(request.form.get("zeitraum_wochen", daten.get("zeitraum_wochen", 8))))
+        # Ein geleertes Feld kam frueher als int("") an und endete im
+        # Serverfehler - dann lieber den bisherigen Wert behalten.
+        try:
+            wochen = int(request.form.get("zeitraum_wochen", ""))
+        except ValueError:
+            wochen = int(daten.get("zeitraum_wochen", 8))
+        daten["zeitraum_wochen"] = min(52, max(1, wochen))
         daten["aktive_anbieter"] = request.form.getlist("aktive_anbieter")
         daten["aktive_genres"] = [int(g) for g in request.form.getlist("aktive_genres")]
         daten["sprachen"] = request.form.getlist("sprachen")

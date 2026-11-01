@@ -38,7 +38,7 @@
   <div class="fehler-hinweis">{{ fehler }}</div>
   {% endif %}
 
-  <form method="post" action="{{ url_for('einstellungen_seite') }}">
+  <form method="post" action="{{ url_for('einstellungen_seite') }}" id="einstellungen-formular">
 
     <div class="einstellungen-block">
       <h2>TMDB-API-Schlüssel</h2>
@@ -145,13 +145,23 @@
     <button class="primaer" type="submit">Speichern</button>
   </form>
 
+  {# Erscheint, sobald das Formular vom geladenen Stand abweicht (siehe
+     einstellungen.js) - "Speichern" ganz unten unter den Listen wurde leicht
+     vergessen. #}
+  <div class="scan-hinweis rueckgaengig-leiste speichern-leiste" id="speichern-leiste" role="status" hidden>
+    <span>Ungespeicherte Änderungen</span>
+    <button type="button" id="leiste-verwerfen">Verwerfen</button>
+    <button type="button" class="primaer" id="leiste-speichern">Speichern</button>
+  </div>
+
   <!-- Bewusst ausserhalb des Formulars oben: ein Knopf darin wuerde beim
        Anklicken das Einstellungsformular abschicken. -->
   <div class="einstellungen-block" id="kalender">
     <h2>Kalender</h2>
     <p class="hinweis">
       Alle Starts, die die Übersicht gerade zeigt (Zeitraum, Anbieter, Genres, Sprachen), als
-      ganztägige Termine &ndash; die Merkliste ist nicht dabei.
+      ganztägige Termine, dazu deine eigenen Termine an gemerkten Titeln. Die übrige Merkliste
+      ist nicht dabei.
     </p>
     <a class="knopf" href="{{ url_for('kalender') }}">📅 Als .ics-Datei herunterladen</a>
     <p class="feld-hinweis">
@@ -170,8 +180,8 @@
   <div class="einstellungen-block">
     <h2>Sicherung</h2>
     <p class="hinweis">
-      Gesichert werden Merkliste, ausgeblendete Titel, Zeitraum, Anbieter-, Genre- und Sprachauswahl
-      sowie der TMDB-Schlüssel &ndash; also alles, was sich nicht von selbst wiederbeschafft.
+      Gesichert werden Merkliste samt eigenen Terminen, ausgeblendete Titel, Zeitraum, Anbieter-,
+      Genre- und Sprachauswahl sowie der TMDB-Schlüssel &ndash; also alles, was sich nicht von selbst wiederbeschafft.
       Die Termine selbst kommen beim nächsten Aktualisieren ohnehin neu und sind deshalb nicht dabei.
     </p>
     <p class="feld-hinweis">

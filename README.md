@@ -400,8 +400,11 @@ werden einzeln bei TMDB abgefragt — ohne jeden Filter.
 3. In das Suchfeld den Titel tippen, z.B. `Reacher`. Während des Tippens
    erscheinen Vorschläge mit Poster und Jahr.
 4. Den richtigen Treffer **anklicken** — er wandert in die Liste darunter.
-5. Ganz unten auf **„Speichern"** klicken. **Ohne diesen Klick ist nichts
-   gespeichert.**
+5. Auf **„Speichern"** klicken. Sobald etwas geändert ist, schwebt unten im
+   Bild eine Leiste **„Ungespeicherte Änderungen · Verwerfen · Speichern"**;
+   der Knopf ganz unten auf der Seite tut dasselbe. **Ohne diesen Klick ist
+   nichts gespeichert.** Willst du die Seite mit offenen Änderungen verlassen,
+   fragt der Browser vorher nach.
 
 Zum Entfernen: in der Liste beim Titel auf *entfernen* klicken, dann wieder
 *Speichern*. Schneller geht es direkt auf der Startseite: Oben rechts auf
@@ -577,8 +580,10 @@ Sicherung mit.
 
 # Weitere Einstellungen
 
-Alles unter **„Einstellungen"**; nach jeder Änderung unten auf **„Speichern"**
-klicken. Jede Speicherung holt die Daten sofort neu.
+Alles unter **„Einstellungen"**; nach jeder Änderung auf **„Speichern"**
+klicken, entweder in der Leiste, die dann unten im Bild erscheint, oder ganz
+unten auf der Seite. **„Verwerfen"** in der Leiste nimmt alle offenen
+Änderungen zurück. Jede Speicherung holt die Daten sofort neu.
 
 - **Vorschau-Zeitraum** — wie viele Wochen im Voraus angezeigt werden.
   Je weiter, desto mehr steht drin; sehr weit im Voraus wird allerdings nur
@@ -692,8 +697,8 @@ erscheinen, falls noch ein Paket nachinstalliert werden muss. Wird ein
 
 Steht bei ihm *„Noch kein Termin bekannt"*, kennt TMDB schlicht kein Datum —
 siehe [Merkliste](#merkliste-bestimmte-titel-im-blick-behalten). Fehlt er ganz,
-ist er vermutlich nicht gespeichert: nach dem Hinzufügen muss unten
-**„Speichern"** geklickt werden.
+ist er vermutlich nicht gespeichert: nach dem Hinzufügen muss
+**„Speichern"** geklickt werden (Leiste unten im Bild oder Knopf am Seitenende).
 
 ### Ein Film startet bei einem Anbieter, steht aber nirgends
 
