@@ -531,6 +531,11 @@ section.abschnitt h2 {
 @media (max-width: 560px) {
   .details-ansicht { flex-direction: column; }
   .details-ansicht .such-poster { flex-basis: auto; width: 140px; }
+  .such-treffer .such-poster { flex-basis: 84px; width: 84px; margin: 0.7rem 0 0.7rem 0.7rem; }
+  /* Neben der 8.5rem-Beschriftung blieb fuer lange Anbieter-Namen kein Platz,
+     sie liefen rechts aus der Karte. */
+  .such-treffer .bezug-zeile { flex-direction: column; gap: 0.25rem; }
+  .such-treffer .bezug-art { flex: none; }
 }
 
 .karte .jetzt-verfuegbar {
@@ -682,12 +687,19 @@ html:not([data-ansicht="woche"]) [data-ansicht-inhalt="woche"] { display: none; 
   overflow: hidden;
 }
 
+/* align-self: ohne das zieht die Flexbox das Poster auf Kartenhoehe, und
+   object-fit schneidet bei vielen Anbieter-Zeilen nur noch einen schmalen
+   Streifen aus der Bildmitte (gesehen bei "Michael Clayton"). */
 .such-poster {
-  flex: 0 0 90px;
-  width: 90px;
+  flex: 0 0 110px;
+  width: 110px;
+  height: auto;
+  align-self: flex-start;
   aspect-ratio: 2 / 3;
   object-fit: cover;
   background: var(--surface);
+  margin: 0.8rem 0 0.8rem 0.8rem;
+  border-radius: 12px;
 }
 
 .such-poster.poster-platzhalter {
@@ -731,12 +743,21 @@ html:not([data-ansicht="woche"]) [data-ansicht-inhalt="woche"] { display: none; 
   gap: 0.6rem;
 }
 
+/* Merken, Trailer und Details in einer Zeile - einzeln in der Spalte wurden
+   die Links zu Balken ueber die ganze Breite. */
+.such-aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.such-aktionen .merken-formular { margin: 0; }
+
 .such-trailer {
   font-size: 0.75rem;
   padding: 0.3rem 0.7rem;
-  margin-top: 0.4rem;
-  display: inline-block;
-  margin-right: 0.4rem;
+  white-space: nowrap;
 }
 
 .details-ansicht {
@@ -749,6 +770,7 @@ html:not([data-ansicht="woche"]) [data-ansicht-inhalt="woche"] { display: none; 
 .details-ansicht .such-poster {
   flex: 0 0 180px;
   width: 180px;
+  margin: 0;
 }
 
 .details-inhalt {
