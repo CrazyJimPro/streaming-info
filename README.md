@@ -410,6 +410,12 @@ werden einzeln bei TMDB abgefragt — ohne jeden Filter.
    nichts gespeichert.** Willst du die Seite mit offenen Änderungen verlassen,
    fragt der Browser vorher nach.
 
+Die Liste ist zunächst **eingeklappt**; neben der Überschrift steht, wie viele
+Titel drin sind. **„Ausklappen ▾"** zeigt sie, **„Einklappen ▴"** blendet sie
+wieder aus. Der Browser merkt sich, wie du es zuletzt hattest (bei
+„Ausgeblendete Titel" genauso). Fügst du über die Suche etwas hinzu, klappt
+die Liste von selbst auf.
+
 Jede Zeile der Liste zeigt ein kleines Poster, Art und Jahr. Hat der Titel
 einen [eigenen Termin](#eigener-termin), steht er als farbiges Schild darunter
 (z. B. „📅 06.11.2026 · WOW (Sky)"). Ein Klick auf den Titel öffnet seine

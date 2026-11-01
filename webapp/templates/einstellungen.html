@@ -165,29 +165,44 @@
     </div>
 
     <div class="einstellungen-block" id="merkliste">
-      <h2>Merkliste</h2>
+      <div class="block-kopf">
+        <h2>Merkliste</h2>
+        <span class="auswahl-zaehler hinweis" data-anzahl-fuer="merk-liste"></span>
+        <button type="button" class="auswahl-knopf klapp-knopf" data-klapp="merk-klapp" aria-controls="merk-klapp" aria-expanded="true">Einklappen</button>
+      </div>
       <p class="hinweis">Titel hier werden immer angezeigt, auch wenn ihr Genre oder ihre Sprache nicht ausgewählt ist.
         Ein Klick auf den Titel öffnet seine Detailseite, dort lässt sich auch ein eigener Termin eintragen.
         {% if merk_zeilen | selectattr("termin") | list %}„entfernen“ löscht einen eigenen Termin mit.{% endif %}</p>
       <input type="text" id="merk-suche" placeholder="Film oder Serie suchen &hellip;" autocomplete="off">
       <div id="merk-ergebnisse" class="suchergebnisse"></div>
-      <table class="merkliste-tabelle" id="merk-liste">
-        {% for z in merk_zeilen %}{{ listen_zeile(z, "merk") }}{% endfor %}
-      </table>
-      <p class="leer-hinweis liste-leer" data-leer-fuer="merk-liste" {% if merk_zeilen %}hidden{% endif %}>
-        Noch nichts gemerkt &ndash; über das Suchfeld oben oder den ☆ auf einer Karte der Übersicht.
-      </p>
+      {# Ein-/ausklappbar (einstellungen.js); Suchfeld und Hinweis bleiben
+         sichtbar, eingeklappt ist nur die Liste. Die versteckten Felder
+         bleiben auch eingeklappt im Formular. #}
+      <div class="klapp-inhalt" id="merk-klapp">
+        <table class="merkliste-tabelle" id="merk-liste">
+          {% for z in merk_zeilen %}{{ listen_zeile(z, "merk") }}{% endfor %}
+        </table>
+        <p class="leer-hinweis liste-leer" data-leer-fuer="merk-liste" {% if merk_zeilen %}hidden{% endif %}>
+          Noch nichts gemerkt &ndash; über das Suchfeld oben oder den ☆ auf einer Karte der Übersicht.
+        </p>
+      </div>
     </div>
 
     <div class="einstellungen-block" id="ausgeblendet">
-      <h2>Ausgeblendete Titel</h2>
+      <div class="block-kopf">
+        <h2>Ausgeblendete Titel</h2>
+        <span class="auswahl-zaehler hinweis" data-anzahl-fuer="ausblend-liste"></span>
+        <button type="button" class="auswahl-knopf klapp-knopf" data-klapp="ausblend-klapp" aria-controls="ausblend-klapp" aria-expanded="true">Einklappen</button>
+      </div>
       <p class="hinweis">Über den „Ausblenden“-Knopf auf der Übersichtsseite hinzugefügt. Hier wieder entfernen, um einen Titel erneut anzuzeigen.</p>
-      <table class="merkliste-tabelle" id="ausblend-liste">
-        {% for z in ausblend_zeilen %}{{ listen_zeile(z, "ausblend") }}{% endfor %}
-      </table>
-      <p class="leer-hinweis liste-leer" data-leer-fuer="ausblend-liste" {% if ausblend_zeilen %}hidden{% endif %}>
-        Nichts ausgeblendet.
-      </p>
+      <div class="klapp-inhalt" id="ausblend-klapp">
+        <table class="merkliste-tabelle" id="ausblend-liste">
+          {% for z in ausblend_zeilen %}{{ listen_zeile(z, "ausblend") }}{% endfor %}
+        </table>
+        <p class="leer-hinweis liste-leer" data-leer-fuer="ausblend-liste" {% if ausblend_zeilen %}hidden{% endif %}>
+          Nichts ausgeblendet.
+        </p>
+      </div>
     </div>
 
     <button class="primaer" type="submit">Speichern</button>

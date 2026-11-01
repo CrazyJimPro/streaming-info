@@ -56,11 +56,50 @@
     return feld;
   }
 
-  // "Noch nichts gemerkt" / "Nichts ausgeblendet" unter einer leeren Liste.
+  // "Noch nichts gemerkt" / "Nichts ausgeblendet" unter einer leeren Liste,
+  // dazu die Anzahl neben der Ueberschrift (sichtbar auch eingeklappt).
   function leerHinweisAktualisieren(listeElement) {
+    var anzahl = listeElement.querySelectorAll("tr").length;
     var hinweis = document.querySelector('[data-leer-fuer="' + listeElement.id + '"]');
-    if (hinweis) hinweis.hidden = listeElement.querySelector("tr") !== null;
+    if (hinweis) hinweis.hidden = anzahl > 0;
+    var zaehler = document.querySelector('[data-anzahl-fuer="' + listeElement.id + '"]');
+    if (zaehler) zaehler.textContent = anzahl === 1 ? "1 Titel" : anzahl + " Titel";
   }
+
+  // Merkliste/Ausgeblendet ein- und ausklappen. Eingeklappt ist der
+  // Normalfall (die Listen werden lang); wer aufklappt, findet sie beim
+  // naechsten Besuch wieder offen - gemerkt pro Liste im Browser.
+  function klappSchluessel(id) { return "si-klapp-" + id; }
+
+  function klappen(knopf, offen, merken) {
+    var inhalt = document.getElementById(knopf.getAttribute("data-klapp"));
+    if (!inhalt) return;
+    inhalt.hidden = !offen;
+    knopf.setAttribute("aria-expanded", offen ? "true" : "false");
+    knopf.textContent = offen ? "Einklappen ▴" : "Ausklappen ▾";
+    if (merken) {
+      try { localStorage.setItem(klappSchluessel(inhalt.id), offen ? "auf" : "zu"); } catch (e) {}
+    }
+  }
+
+  document.querySelectorAll(".klapp-knopf").forEach(function (knopf) {
+    var gespeichert = null;
+    try { gespeichert = localStorage.getItem(klappSchluessel(knopf.getAttribute("data-klapp"))); } catch (e) {}
+    klappen(knopf, gespeichert === "auf", false);
+    knopf.addEventListener("click", function () {
+      klappen(knopf, knopf.getAttribute("aria-expanded") !== "true", true);
+    });
+  });
+
+  // Wer ueber die Suche einen Titel hinzufuegt, soll ihn auch sehen.
+  function aufklappenFuer(listeElement) {
+    var inhalt = listeElement.closest(".klapp-inhalt");
+    if (!inhalt || !inhalt.hidden) return;
+    var knopf = document.querySelector('[data-klapp="' + inhalt.id + '"]');
+    if (knopf) klappen(knopf, true, false);
+  }
+
+  document.querySelectorAll(".merkliste-tabelle").forEach(leerHinweisAktualisieren);
 
   function steht(listeElement, tmdbId, medientyp) {
     return listeElement.querySelector(
@@ -121,6 +160,7 @@
     zeile.appendChild(verstecktesFeld(praefix + "_titel", t.titel));
     listeElement.appendChild(zeile);
     leerHinweisAktualisieren(listeElement);
+    aufklappenFuer(listeElement);
     pruefeAenderungen();
   }
 

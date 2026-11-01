@@ -1004,7 +1004,12 @@ html:not([data-ansicht="woche"]) [data-ansicht-inhalt="woche"] { display: none; 
 
 .entfernen-knopf { font-size: 0.8rem; padding: 0.3rem 0.8rem; white-space: nowrap; }
 
-.liste-leer[hidden] { display: none; }
+.liste-leer[hidden], .klapp-inhalt[hidden] { display: none; }
+
+.klapp-knopf { min-width: 7.5rem; }
+
+/* Speichern am Formularende klebte am Kalender-Block darunter. */
+#einstellungen-formular > button[type="submit"] { margin-bottom: 1.5rem; }
 
 .gespeichert-hinweis {
   background: #1a7a3a22;
