@@ -15,6 +15,28 @@
   </script>
 </head>
 <body>
+  {# Eine Zeile in Merkliste/Ausgeblendet. Die versteckten Felder sind das,
+     was gespeichert wird (_liste_aus_formular); einstellungen.js baut neue
+     Zeilen nach demselben Muster. #}
+  {% macro listen_zeile(z, praefix) %}
+  <tr data-tmdb-id="{{ z.tmdb_id }}" data-medientyp="{{ z.medientyp }}">
+    <td class="listen-poster">
+      {% if z.poster_url %}<img src="{{ z.poster_url }}" alt="" loading="lazy">{% else %}<span class="listen-poster-leer"></span>{% endif %}
+    </td>
+    <td class="listen-titel">
+      <a href="{{ z.details_url }}">{{ z.titel }}</a>
+      <span class="hinweis">{{ "Film" if z.medientyp == "film" else "Serie" }}{% if z.jahr %} &middot; {{ z.jahr }}{% endif %}</span>
+      {% if z.termin %}<span class="badge" style="background:{{ z.termin.farbe }}">📅 {{ z.termin.datum }} &middot; {{ z.termin.name }}</span>{% endif %}
+    </td>
+    <td class="listen-aktion">
+      <button type="button" class="entfernen-knopf"{% if z.termin %} title="Löscht auch den eigenen Termin"{% endif %}>entfernen</button>
+    </td>
+    <input type="hidden" name="{{ praefix }}_tmdb_id" value="{{ z.tmdb_id }}">
+    <input type="hidden" name="{{ praefix }}_medientyp" value="{{ z.medientyp }}">
+    <input type="hidden" name="{{ praefix }}_titel" value="{{ z.titel }}">
+  </tr>
+  {% endmacro %}
+
   <header>
     <div>
       <h1>Einstellungen</h1>
@@ -110,36 +132,28 @@
 
     <div class="einstellungen-block">
       <h2>Merkliste</h2>
-      <p class="hinweis">Titel hier werden immer angezeigt, auch wenn ihr Genre oder ihre Sprache nicht ausgewählt ist.</p>
+      <p class="hinweis">Titel hier werden immer angezeigt, auch wenn ihr Genre oder ihre Sprache nicht ausgewählt ist.
+        Ein Klick auf den Titel öffnet seine Detailseite, dort lässt sich auch ein eigener Termin eintragen.
+        {% if merk_zeilen | selectattr("termin") | list %}„entfernen“ löscht einen eigenen Termin mit.{% endif %}</p>
       <input type="text" id="merk-suche" placeholder="Film oder Serie suchen &hellip;" autocomplete="off">
       <div id="merk-ergebnisse" class="suchergebnisse"></div>
       <table class="merkliste-tabelle" id="merk-liste">
-        {% for eintrag in einstellungen.merkliste %}
-        <tr data-tmdb-id="{{ eintrag.tmdb_id }}" data-medientyp="{{ eintrag.medientyp }}">
-          <td>{{ eintrag.titel }} <span class="hinweis">({{ "Film" if eintrag.medientyp == "film" else "Serie" }})</span></td>
-          <td><button type="button" class="entfernen-knopf">entfernen</button></td>
-          <input type="hidden" name="merk_tmdb_id" value="{{ eintrag.tmdb_id }}">
-          <input type="hidden" name="merk_medientyp" value="{{ eintrag.medientyp }}">
-          <input type="hidden" name="merk_titel" value="{{ eintrag.titel }}">
-        </tr>
-        {% endfor %}
+        {% for z in merk_zeilen %}{{ listen_zeile(z, "merk") }}{% endfor %}
       </table>
+      <p class="leer-hinweis liste-leer" data-leer-fuer="merk-liste" {% if merk_zeilen %}hidden{% endif %}>
+        Noch nichts gemerkt &ndash; über das Suchfeld oben oder den ☆ auf einer Karte der Übersicht.
+      </p>
     </div>
 
     <div class="einstellungen-block">
       <h2>Ausgeblendete Titel</h2>
       <p class="hinweis">Über den „Ausblenden“-Knopf auf der Übersichtsseite hinzugefügt. Hier wieder entfernen, um einen Titel erneut anzuzeigen.</p>
       <table class="merkliste-tabelle" id="ausblend-liste">
-        {% for eintrag in einstellungen.ausgeblendet %}
-        <tr data-tmdb-id="{{ eintrag.tmdb_id }}" data-medientyp="{{ eintrag.medientyp }}">
-          <td>{{ eintrag.titel }} <span class="hinweis">({{ "Film" if eintrag.medientyp == "film" else "Serie" }})</span></td>
-          <td><button type="button" class="entfernen-knopf">entfernen</button></td>
-          <input type="hidden" name="ausblend_tmdb_id" value="{{ eintrag.tmdb_id }}">
-          <input type="hidden" name="ausblend_medientyp" value="{{ eintrag.medientyp }}">
-          <input type="hidden" name="ausblend_titel" value="{{ eintrag.titel }}">
-        </tr>
-        {% endfor %}
+        {% for z in ausblend_zeilen %}{{ listen_zeile(z, "ausblend") }}{% endfor %}
       </table>
+      <p class="leer-hinweis liste-leer" data-leer-fuer="ausblend-liste" {% if ausblend_zeilen %}hidden{% endif %}>
+        Nichts ausgeblendet.
+      </p>
     </div>
 
     <button class="primaer" type="submit">Speichern</button>

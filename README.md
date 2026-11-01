@@ -400,14 +400,21 @@ werden einzeln bei TMDB abgefragt — ohne jeden Filter.
 3. In das Suchfeld den Titel tippen, z.B. `Reacher`. Während des Tippens
    erscheinen Vorschläge mit Poster und Jahr.
 4. Den richtigen Treffer **anklicken** — er wandert in die Liste darunter.
+   Steht ein Titel schon auf der Merkliste, ist er in den Vorschlägen mit
+   **„✓ gemerkt"** markiert.
 5. Auf **„Speichern"** klicken. Sobald etwas geändert ist, schwebt unten im
    Bild eine Leiste **„Ungespeicherte Änderungen · Verwerfen · Speichern"**;
    der Knopf ganz unten auf der Seite tut dasselbe. **Ohne diesen Klick ist
    nichts gespeichert.** Willst du die Seite mit offenen Änderungen verlassen,
    fragt der Browser vorher nach.
 
+Jede Zeile der Liste zeigt ein kleines Poster, Art und Jahr. Hat der Titel
+einen [eigenen Termin](#eigener-termin), steht er als farbiges Schild darunter
+(z. B. „📅 06.11.2026 · WOW (Sky)"). Ein Klick auf den Titel öffnet seine
+Detailseite.
+
 Zum Entfernen: in der Liste beim Titel auf *entfernen* klicken, dann wieder
-*Speichern*. Schneller geht es direkt auf der Startseite: Oben rechts auf
+*Speichern*. Ein eigener Termin des Titels wird dabei mit gelöscht. Schneller geht es direkt auf der Startseite: Oben rechts auf
 jedem Poster sitzt ein **Stern**. **☆** (leer) setzt den Titel auf die
 Merkliste, **★** (gelb) nimmt ihn wieder herunter. So wanderst du eine Serie,
 die dir beim Start auffällt, mit einem Klick auf die Merkliste.
@@ -445,6 +452,8 @@ Rückgängig machen geht auf drei Wegen:
 - **Später, auf der Detailseite** des Titels (z.B. über die Suche gefunden):
   dort steht „Ausgeblendet" mit dem Knopf **Wieder einblenden**.
 - **In den Einstellungen:** *Ausgeblendete Titel → entfernen → Speichern*.
+  Das Poster in jeder Zeile hilft bei Titeln, die nur in fremder Schrift
+  dastehen; ein Klick auf den Titel öffnet seine Detailseite.
 
 ---
 

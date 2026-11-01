@@ -894,6 +894,21 @@ html:not([data-ansicht="woche"]) [data-ansicht-inhalt="woche"] { display: none; 
 .suchtreffer:last-child { border-radius: 0 0 10px 10px; }
 .suchtreffer:hover { background: var(--surface); }
 
+.suchtreffer { display: flex; align-items: center; gap: 0.6rem; }
+
+.suchtreffer img, .suchtreffer .listen-poster-leer {
+  flex: none;
+  width: 1.8rem;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.suchtreffer.schon-drin { cursor: default; opacity: 0.6; }
+.suchtreffer.schon-drin:hover { background: var(--card-bg); }
+.suchtreffer .hinweis { margin-left: auto; white-space: nowrap; }
+
 .merkliste-tabelle {
   width: 100%;
   border-collapse: collapse;
@@ -902,7 +917,38 @@ html:not([data-ansicht="woche"]) [data-ansicht-inhalt="woche"] { display: none; 
 .merkliste-tabelle td {
   padding: 0.4rem 0;
   border-bottom: 1px solid var(--surface-border);
+  vertical-align: middle;
 }
+
+/* Zeilen in Merkliste/Ausgeblendet: Mini-Poster, Titel als Link, darunter
+   Art/Jahr und ggf. der eigene Termin. */
+.merkliste-tabelle .listen-poster { width: 2.5rem; padding-right: 0.7rem; }
+
+.listen-poster img, .listen-poster-leer {
+  display: block;
+  width: 2.5rem;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.listen-titel a { color: var(--fg); font-weight: 700; text-decoration: none; }
+.listen-titel a:hover { text-decoration: underline; }
+
+.listen-titel .hinweis, .listen-titel .badge {
+  display: inline-block;
+  margin: 0.15rem 0.4rem 0 0;
+  font-size: 0.78rem;
+}
+
+.listen-titel .hinweis { display: block; }
+
+.merkliste-tabelle .listen-aktion { text-align: right; padding-left: 0.5rem; }
+
+.entfernen-knopf { font-size: 0.8rem; padding: 0.3rem 0.8rem; white-space: nowrap; }
+
+.liste-leer[hidden] { display: none; }
 
 .gespeichert-hinweis {
   background: #1a7a3a22;

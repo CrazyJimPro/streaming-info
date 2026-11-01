@@ -810,6 +810,35 @@ def _sprachauswahl(gewaehlt: list[str]) -> list[dict]:
     return sorted(auswahl, key=lambda s: (s["code"] not in ("de", "en"), s["code"] != "de", s["name"].lower()))
 
 
+def _listen_zeilen(eintraege: list[dict], einstellungen: dict, mit_termin: bool) -> list[dict]:
+    """Merkliste/Ausgeblendet fuer die Einstellungsseite: je Eintrag Poster,
+    Jahr und Link zur Detailseite, bei der Merkliste auch der eigene Termin -
+    "entfernen" nimmt den ja mit. Poster und Jahr kommen aus der Tabelle
+    titel; frisch gemerkte Titel ohne Scan stehen dort noch nicht und bleiben
+    ohne. Die Reihenfolge bleibt die der Liste (hole_merkliste_eintraege
+    sortiert nach Termin)."""
+    bekannt = {(e["tmdb_id"], e["medientyp"]): e for e in hole_merkliste_eintraege(eintraege, db_pfad=DB_PFAD)}
+    karte = _termin_anbieter_karte(_anbieter_karte()) if mit_termin else {}
+    zurueck = url_for("einstellungen_seite")
+    zeilen = []
+    for eintrag in eintraege:
+        info = bekannt.get((eintrag["tmdb_id"], eintrag["medientyp"]), {})
+        termin = _eigener_termin(einstellungen, eintrag["tmdb_id"], eintrag["medientyp"]) if mit_termin else None
+        if termin:
+            anbieter = karte.get(termin["anbieter"], karte[EIGENER_TERMIN_SONSTIGES])
+            termin = {"datum": _datum_lesbar(termin["datum"]), "name": anbieter["name"], "farbe": anbieter["farbe"]}
+        zeilen.append(
+            {
+                **eintrag,
+                "poster_url": _poster_url(info.get("poster_pfad")),
+                "jahr": (info.get("erscheinungsdatum") or "")[:4],
+                "details_url": url_for("details", medientyp=eintrag["medientyp"], tmdb_id=eintrag["tmdb_id"], zurueck=zurueck),
+                "termin": termin,
+            }
+        )
+    return zeilen
+
+
 @app.route("/einstellungen", methods=["GET", "POST"])
 def einstellungen_seite():
     daten = lade_einstellungen()
@@ -855,6 +884,8 @@ def einstellungen_seite():
         "einstellungen.html",
         kalender_url=url_for("kalender", _external=True),
         einstellungen=daten,
+        merk_zeilen=_listen_zeilen(daten.get("merkliste", []), daten, mit_termin=True),
+        ausblend_zeilen=_listen_zeilen(daten.get("ausgeblendet", []), daten, mit_termin=False),
         anbieter=alle_anbieter,
         genres=sorted(genres.items(), key=lambda kv: kv[1]),
         sprachen=_sprachauswahl(daten.get("sprachen", [])),

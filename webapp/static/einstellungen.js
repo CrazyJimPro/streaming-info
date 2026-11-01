@@ -50,38 +50,71 @@
     return feld;
   }
 
-  // Bewusst ohne innerHTML: ein Titel mit Anfuehrungszeichen hat dort das
-  // value-Attribut abgeschnitten und wurde verstuemmelt gespeichert.
-  function zeileHinzufuegen(listeElement, praefix, tmdbId, medientyp, titel) {
-    var vorhanden = listeElement.querySelector(
+  // "Noch nichts gemerkt" / "Nichts ausgeblendet" unter einer leeren Liste.
+  function leerHinweisAktualisieren(listeElement) {
+    var hinweis = document.querySelector('[data-leer-fuer="' + listeElement.id + '"]');
+    if (hinweis) hinweis.hidden = listeElement.querySelector("tr") !== null;
+  }
+
+  function steht(listeElement, tmdbId, medientyp) {
+    return listeElement.querySelector(
       '[data-tmdb-id="' + tmdbId + '"][data-medientyp="' + medientyp + '"]'
-    );
-    if (vorhanden) return;
+    ) !== null;
+  }
+
+  function posterElement(posterUrl) {
+    if (!posterUrl) {
+      var leer = document.createElement("span");
+      leer.className = "listen-poster-leer";
+      return leer;
+    }
+    var bild = document.createElement("img");
+    bild.src = posterUrl;
+    bild.alt = "";
+    return bild;
+  }
+
+  // Bewusst ohne innerHTML: ein Titel mit Anfuehrungszeichen hat dort das
+  // value-Attribut abgeschnitten und wurde verstuemmelt gespeichert. Aufbau
+  // wie das Makro listen_zeile in einstellungen.html.
+  function zeileHinzufuegen(listeElement, praefix, t) {
+    if (steht(listeElement, t.tmdb_id, t.medientyp)) return;
 
     var zeile = document.createElement("tr");
-    zeile.setAttribute("data-tmdb-id", tmdbId);
-    zeile.setAttribute("data-medientyp", medientyp);
+    zeile.setAttribute("data-tmdb-id", t.tmdb_id);
+    zeile.setAttribute("data-medientyp", t.medientyp);
+
+    var posterZelle = document.createElement("td");
+    posterZelle.className = "listen-poster";
+    posterZelle.appendChild(posterElement(t.poster_url));
 
     var titelZelle = document.createElement("td");
-    titelZelle.appendChild(document.createTextNode(titel + " "));
+    titelZelle.className = "listen-titel";
+    var link = document.createElement("a");
+    link.href = "/details/" + t.medientyp + "/" + t.tmdb_id + "?zurueck=" + encodeURIComponent("/einstellungen");
+    link.textContent = t.titel;
+    titelZelle.appendChild(link);
     var art = document.createElement("span");
     art.className = "hinweis";
-    art.textContent = "(" + (medientyp === "film" ? "Film" : "Serie") + ")";
+    art.textContent = (t.medientyp === "film" ? "Film" : "Serie") + (t.jahr ? " · " + t.jahr : "");
     titelZelle.appendChild(art);
 
     var knopfZelle = document.createElement("td");
+    knopfZelle.className = "listen-aktion";
     var knopf = document.createElement("button");
     knopf.type = "button";
     knopf.className = "entfernen-knopf";
     knopf.textContent = "entfernen";
     knopfZelle.appendChild(knopf);
 
+    zeile.appendChild(posterZelle);
     zeile.appendChild(titelZelle);
     zeile.appendChild(knopfZelle);
-    zeile.appendChild(verstecktesFeld(praefix + "_tmdb_id", tmdbId));
-    zeile.appendChild(verstecktesFeld(praefix + "_medientyp", medientyp));
-    zeile.appendChild(verstecktesFeld(praefix + "_titel", titel));
+    zeile.appendChild(verstecktesFeld(praefix + "_tmdb_id", t.tmdb_id));
+    zeile.appendChild(verstecktesFeld(praefix + "_medientyp", t.medientyp));
+    zeile.appendChild(verstecktesFeld(praefix + "_titel", t.titel));
     listeElement.appendChild(zeile);
+    leerHinweisAktualisieren(listeElement);
     pruefeAenderungen();
   }
 
@@ -110,12 +143,24 @@
             treffer.forEach(function (t) {
               var eintrag = document.createElement("div");
               eintrag.className = "suchtreffer";
-              eintrag.textContent = t.titel + (t.jahr ? " (" + t.jahr + ")" : "") + " — " + (t.medientyp === "film" ? "Film" : "Serie");
-              eintrag.addEventListener("click", function () {
-                zeileHinzufuegen(liste, praefix, t.tmdb_id, t.medientyp, t.titel);
-                ergebnisse.innerHTML = "";
-                input.value = "";
-              });
+              eintrag.appendChild(posterElement(t.poster_url));
+              var text = document.createElement("span");
+              text.textContent = t.titel + (t.jahr ? " (" + t.jahr + ")" : "") + " — " + (t.medientyp === "film" ? "Film" : "Serie");
+              eintrag.appendChild(text);
+              // Schon in der Liste: markieren statt ein zweites Mal anbieten.
+              if (steht(liste, t.tmdb_id, t.medientyp)) {
+                eintrag.classList.add("schon-drin");
+                var marke = document.createElement("span");
+                marke.className = "hinweis";
+                marke.textContent = "✓ gemerkt";
+                eintrag.appendChild(marke);
+              } else {
+                eintrag.addEventListener("click", function () {
+                  zeileHinzufuegen(liste, praefix, t);
+                  ergebnisse.innerHTML = "";
+                  input.value = "";
+                });
+              }
               ergebnisse.appendChild(eintrag);
             });
           })
@@ -129,7 +174,10 @@
   document.addEventListener("click", function (ereignis) {
     var knopf = ereignis.target.closest(".entfernen-knopf");
     if (!knopf) return;
-    knopf.closest("tr").remove();
+    var zeile = knopf.closest("tr");
+    var liste = zeile.closest("table");
+    zeile.remove();
+    if (liste) leerHinweisAktualisieren(liste);
     pruefeAenderungen();
   });
 
